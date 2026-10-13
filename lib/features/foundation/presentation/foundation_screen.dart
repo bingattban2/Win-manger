@@ -83,7 +83,7 @@ class FoundationScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              'الجزء الخامس — الحسابات والصلاحيات',
+                              'الجزء السادس — هندسة التطبيق ومسار العمليات',
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.w700,
@@ -92,8 +92,8 @@ class FoundationScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             const Text(
-                              'تجهيز سياسة الإدارة العامة والإدارة العادية والمشرفين '
-                              'وحماية الحساب الأساسي وفحص كلمات المرور دون كشفها. '
+                              'تنظيم المشروع إلى طبقات برمجية مستقلة وإعداد مسار مركزي '
+                              'للتحقق والتأكيد والتراجع وسجل العمليات. '
                               'هذه نسخة اختبار للبنية وليست نظامًا تشغيليًا بعد.',
                             ),
                           ],
@@ -122,7 +122,8 @@ class FoundationScreen extends StatelessWidget {
                       const SizedBox(height: 12),
                       const _InfoLine('بناء واجهة Windows باسم التمام اليومي.'),
                       const _InfoLine('اختبارات صلاحيات الحسابات ومنع إدارة المستخدمين للمشرفين.'),
-                      const _InfoLine('إنشاء مدقق مشفر لكلمات المرور وحماية حساب الإدارة المؤسس.'),
+                      const _InfoLine('معالجة عمليات التعديل داخل معاملة واحدة مع التراجع عند الخطأ.'),
+                      const _InfoLine('إعادة التحقق من الصلاحيات ومنع المعاينات القديمة والتكرار.'),
                       const _InfoLine('كاش Flutter وDart مفعل لبناء Windows على GitHub.'),
                       Text('جداول قاعدة البيانات: ${DatabaseSchemaCatalog.tableNames.length}',
                         style: Theme.of(context).textTheme.titleSmall),
@@ -130,7 +131,7 @@ class FoundationScreen extends StatelessWidget {
                       const Divider(),
                       const SizedBox(height: 8),
                       Text(
-                        'تعمل اختبارات PART V حاليًا على مستودع حسابات تجريبي وSQLite داخل الذاكرة، '
+                        'تعمل اختبارات PART VI على مستودعات تجريبية داخل الذاكرة، '
                         'ومحرك Dart حسابي دون تخزين فعلي. لم يُفعّل بعد محرك البيانات المشفر '
                         'أو تسجيل دخول إنتاجي أو شاشة إدارة مستخدمين فعلية. ',
                         style: TextStyle(color: colors.onSurfaceVariant),
@@ -139,7 +140,7 @@ class FoundationScreen extends StatelessWidget {
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'نسخة اختبار سياسة الحسابات ${ProjectInfo.version}',
+                          'نسخة اختبار هندسة التطبيق ${ProjectInfo.version}',
                           style: Theme.of(context).textTheme.labelMedium,
                         ),
                       ),

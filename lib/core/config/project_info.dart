@@ -2,7 +2,7 @@
 abstract final class ProjectInfo {
   static const String nameArabic = 'التمام اليومي';
   static const String codeName = 'ADWAS Personnel';
-  static const String version = '0.0.5';
+  static const String version = '0.0.6';
   static const int foundationPhase = 0;
   static const bool isProductionReady = false;
 }

@@ -14,7 +14,7 @@ void main() {
     expect(script, contains(FoundationalAccount.storedVerifier));
     expect(script, isNot(contains(String.fromCharCodes([97, 100, 119, 97, 115, 50, 48, 49, 57, 49, 49, 51]))));
     expect(ProjectInfo.nameArabic, 'التمام اليومي');
-    expect(ProjectInfo.version, '0.0.5');
+    expect(ProjectInfo.version, '0.0.6');
     expect(ProjectInfo.isProductionReady, isFalse);
   });
 }

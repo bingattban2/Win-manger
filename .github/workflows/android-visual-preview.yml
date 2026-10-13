@@ -1,0 +1,54 @@
+name: Android visual preview (optional)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preview:
+    name: Build read-only Android UI preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install Flutter with SDK and Pub caches
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+          pub-cache: true
+
+      # This runner exists ONLY in GitHub's temporary workspace; the source
+      # repository and production distribution remain Windows-only.
+      - name: Generate temporary Android preview runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          temporary="$(mktemp -d)"
+          trap 'rm -rf "$temporary"' EXIT
+          flutter create --platforms=android --project-name adwas_personnel --org com.adwas --no-pub "$temporary"
+          cp -a "$temporary/android" "$GITHUB_WORKSPACE/android"
+          flutter pub get
+
+      - name: Compile Android read-only UI preview
+        run: flutter build apk --debug --no-pub
+
+      - name: Upload Android preview APK
+        uses: actions/upload-artifact@v6
+        with:
+          name: Altamam_AlYawmi_Part_VI_Android_ReadOnly_Preview
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
+          retention-days: 7

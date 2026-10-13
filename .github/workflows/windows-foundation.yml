@@ -50,7 +50,7 @@ jobs:
           flutter doctor -v
           flutter config --enable-windows-desktop
 
-      - name: Validate Part III–V SQLite integrity and account policy
+      - name: Validate Part III–VI database, security, and architecture
         run: python -m unittest discover -s scripts -p "test_*.py" -v
 
       - name: Generate and brand the official Windows runner
@@ -89,9 +89,9 @@ jobs:
       - name: Upload private Windows test artifact
         uses: actions/upload-artifact@v6
         with:
-          name: Altamam_AlYawmi_Part_V_Windows_x64
+          name: Altamam_AlYawmi_Part_VI_Windows_x64
           path: |
-            artifacts/Altamam_AlYawmi_Part_V_Windows_x64.zip
+            artifacts/Altamam_AlYawmi_Part_VI_Windows_x64.zip
             artifacts/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 14

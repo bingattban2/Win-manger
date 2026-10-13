@@ -15,7 +15,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const PersonnelApp());
     expect(find.text(ProjectInfo.nameArabic), findsOneWidget);
-    expect(find.text('الجزء الخامس — الحسابات والصلاحيات'), findsOneWidget);
+    expect(find.text('الجزء السادس — هندسة التطبيق ومسار العمليات'), findsOneWidget);
     for (final term in BusinessTerm.values) {
       expect(find.text(term.arabic), findsOneWidget);
     }
