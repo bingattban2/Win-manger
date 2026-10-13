@@ -60,6 +60,16 @@ class PartVIArchitectureTests(unittest.TestCase):
             missing_protection = sorted(set(private_paths) - ignored)
             self.assertEqual(missing_protection, [], f"Private storage is not ignored: {missing_protection}")
 
+    def test_00b_backup_source_layers_have_visible_tracked_markers(self):
+        """Each backup source layer must survive phone/browser file uploads."""
+        for layer in ("presentation", "application", "domain", "repositories", "infrastructure"):
+            readme = LIB / "features" / "backups" / layer / "README.md"
+            self.assertTrue(readme.is_file(), str(readme))
+            self.assertGreater(len(readme.read_text(encoding="utf-8").strip()), 20)
+        wf = (ROOT / ".github/workflows/windows-foundation.yml").read_text(encoding="utf-8")
+        self.assertLess(wf.index("name: Validate Part III–VI database"),
+                        wf.index("name: Restore Flutter SDK and Dart packages cache"))
+
     def test_01_feature_boundaries_exist(self):
         features = (
             "authentication", "dashboard", "personnel", "sites", "statuses",

@@ -50,3 +50,15 @@ release version (`0.0.6+6`) and cached Flutter/Dart dependencies untouched.
 Upload the entire replacement source archive, **including hidden `.gitkeep`
 files in every feature layer**. GitHub Actions must turn green before proceeding
 to PART VII. Full details: `docs/PART_VI_BUILD_HOTFIX.md`.
+
+## PART VI build hotfix 02 — fast failing CI and visible backup layer files
+
+The attached user log references old commit `eb3eacf98ea26b1ad4785e78f0aa3acef4ee7c7c`
+(91 tests), while the corrected commit `036c980ba082717238fbce970e3ddaa2819435f4`
+was already present in GitHub. This archive adds non-hidden `README.md` layer
+markers for the backup module so mobile upload tools cannot accidentally
+leave empty Git directories. It also runs the Python/SQLite tests BEFORE
+restoring ~1.8 GB of Flutter SDK cache, reducing time wasted if source checks
+fail. Caching remains ON for valid builds. The version stays `0.0.6+6`.
+
+See `docs/PART_VI_BUILD_HOTFIX_02.md`.

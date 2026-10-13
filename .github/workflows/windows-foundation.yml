@@ -23,6 +23,21 @@ jobs:
         with:
           persist-credentials: false
 
+      # Validate source integrity before restoring the large Flutter SDK cache.
+      - name: Identify checked-out commit and verify tracked backup layers
+        shell: pwsh
+        run: |
+          Write-Host "Building commit: $(git rev-parse HEAD)"
+          git ls-files lib/features/backups
+          $layers = @('presentation', 'application', 'domain', 'repositories', 'infrastructure')
+          foreach ($layer in $layers) {
+            $path = "lib/features/backups/$layer/README.md"
+            if (-not (Test-Path $path)) { throw "Required tracked source file missing: $path" }
+          }
+
+      - name: Validate Part III–VI database, security, and architecture
+        run: python -m unittest discover -s scripts -p "test_*.py" -v
+
       - name: Restore Flutter SDK and Dart packages cache
         id: flutter-setup
         uses: subosito/flutter-action@v2
@@ -49,9 +64,6 @@ jobs:
           dart --version
           flutter doctor -v
           flutter config --enable-windows-desktop
-
-      - name: Validate Part III–VI database, security, and architecture
-        run: python -m unittest discover -s scripts -p "test_*.py" -v
 
       - name: Generate and brand the official Windows runner
         shell: pwsh
