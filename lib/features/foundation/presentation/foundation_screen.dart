@@ -83,7 +83,7 @@ class FoundationScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              'الجزء الثالث — نموذج البيانات',
+                              'الجزء الرابع — قواعد العمل وسلامة البيانات',
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.w700,
@@ -92,8 +92,8 @@ class FoundationScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             const Text(
-                              'اكتمل إعداد 29 جدولًا مترابطًا، وقيود الرقم (ع) الثابت '
-                              'ومنع التكرار وتداخل المواقع وحماية السجلات. '
+                              'تجهيز محرك القواعد الزمنية وحساب القوة من المواقع الفعلية '
+                              'وتسجيل حركات النقل والفصل من دون استبدال التمام اليومي. '
                               'هذه نسخة اختبار للبنية وليست نظامًا تشغيليًا بعد.',
                             ),
                           ],
@@ -121,24 +121,25 @@ class FoundationScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: 12),
                       const _InfoLine('بناء واجهة Windows باسم التمام اليومي.'),
-                      const _InfoLine('اختبارات آلية للمفاتيح والعلاقات والأرشيف وسجل العمليات.'),
-                      const _InfoLine('منع إدخال البيانات التشغيلية قبل تشفير التخزين.'),
+                      const _InfoLine('اختبارات سلامة المواقع، النقل، الفصل، والعدادات بحسب التاريخ.'),
+                      const _InfoLine('تخطيط إغلاق الأشهر الناقصة دون نقل التحضير للشهر الجديد.'),
+                      const _InfoLine('كاش Flutter وDart مفعل لبناء Windows على GitHub.'),
                       Text('جداول قاعدة البيانات: ${DatabaseSchemaCatalog.tableNames.length}',
                         style: Theme.of(context).textTheme.titleSmall),
                       const SizedBox(height: 14),
                       const Divider(),
                       const SizedBox(height: 8),
                       Text(
-                        'نُفِّذ مخطط قاعدة البيانات واختُبر في ذاكرة SQLite فقط. '
-                        'لم يُفعّل التخزين الدائم حتى يتم إعداد محرك قاعدة البيانات المشفرة. '
-                        'تفعيل الحسابات والتحضير والحركات والأرشيف ضمن المراحل القادمة.',
+                        'تعمل اختبارات PART IV حاليًا على قاعدة SQLite مؤقتة داخل الذاكرة، '
+                        'ومحرك Dart حسابي دون تخزين فعلي. لم يُفعّل بعد محرك البيانات المشفر '
+                        'أو أرشفة تلقائية أثناء التشغيل أو شاشات عمليات الأفراد. ',
                         style: TextStyle(color: colors.onSurfaceVariant),
                       ),
                       const SizedBox(height: 18),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'نسخة اختبار نموذج البيانات ${ProjectInfo.version}',
+                          'نسخة اختبار قواعد العمل ${ProjectInfo.version}',
                           style: Theme.of(context).textTheme.labelMedium,
                         ),
                       ),

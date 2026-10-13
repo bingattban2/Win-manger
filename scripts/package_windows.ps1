@@ -10,7 +10,7 @@ try {
 
   $stage = Join-Path $root 'artifacts\portable'
   $deliverable = 'التمام اليومي.exe'
-  $archiveName = 'Altamam_AlYawmi_Part_III_Windows_x64.zip'
+  $archiveName = 'Altamam_AlYawmi_Part_IV_Windows_x64.zip'
   $artifacts = Join-Path $root 'artifacts'
   if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
   New-Item -ItemType Directory -Force -Path $stage | Out-Null

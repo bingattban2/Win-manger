@@ -1,55 +1,53 @@
-# التمام اليومي — Windows (Flutter)
+# التمام اليومي — Altamam Al-Yawmi (Flutter Windows)
 
-**PART III — Permanent Personnel Identification & Exact Business Data Model**  
-**Version 0.0.3+3 — structural smoke-test, not yet a production personnel system**
+**PART IV — Database Integrity & Business Rules**  
+**Version 0.0.4+4 — Business-engine test milestone; NOT a released personnel system.**
 
-This is a continuation of the previously successfully built **Part II** private GitHub project, not a replacement. The public-facing Windows title and packaged executable remain **التمام اليومي**, while the stable Dart package name is `adwas_personnel`.
+This source ZIP is a direct continuation of the PART III release verified by the user with GitHub Actions. Keep the same private repository `Win-manger`, package ID `adwas_personnel`, Arabic window/program title **التمام اليومي**, and all original documentation and source files.
 
-## What is now implemented
+## Implemented in this milestone
 
-- The Arabic business terminology of Part II, unchanged, including **الرقم (ع)**.
-- Immutable UUID v4 person identifiers and searchable yet display-preserving Arabic/Persian numeral normalization.
-- Canonical, relational SQLite schema in `assets/database/schema_v1.sql`: **29 tables** (27 specified + 2 historical integrity tables), foreign keys, uniqueness indexes and protecting triggers.
-- Permanent reservation of used business numbers, including corrected/retired numbers, preventing another individual from reusing them.
-- Protected default site `غير محدد` and all four default daily attendance statuses with fixed ARGB colors.
-- In-memory database tests enforcing assignment interval non-overlap, daily attendance uniqueness, archive sealing, soft-delete integrity, audit append-only behavior and more.
-- GitHub Actions Windows smoke-build with **cached Flutter SDK and Dart Pub packages**. Windows executable / artifact naming remains Arabic.
-- No unencrypted operational database files and no seeded passwords.
+- Everything from PART III remains, including the 29-table source schema, personnel number protections, default `غير محدد` site, immutable historical records, and all existing tests.
+- `lib/core/dates/business_date.dart`: Gregorian civil date parsing, validation, weekday/Arabic abbreviation, 28/29/30/31-day calendar, local date vs UTC event timestamps.
+- `lib/core/domain/force/force_engine.dart`: pure, deterministic personnel timeline validation, half-open site assignments, historical eligibility/counts, `unprepared` separated from absence, and site-specific monthly cells with independent attendance and movement annotations.
+- `lib/core/domain/archives/month_boundary_planner.dart`: chronological missing-month detection, avoids sealing the current month, and rejects writes to old months and future dates.
+- `lib/core/domain/archives/month_transition_service.dart`: transactional archive-store interface and fail-closed startup/rollover coordination to be connected **only after encrypted persistence** exists.
+- `assets/database/part_iv_rules.sql`: SQLite enforcement for effective-site attendance, departures, same-day transfer conflict, immutable completed months, historical assignments and append-only movements.
+- `assets/database/part_iv_statistics.sql`: parameterized historical-force query by date and optional site, with no dependence on the person's present-day lifecycle flag.
+- `v_monthly_cell_events`: independent transfer-in, transfer-out, dismissal, external-transfer and attendance rows, including both attendance+transfer-in on the same destination day.
+- **58 local Python/SQLite tests passed** (includes previous tests; 33 new PART IV tests). Added Dart unit tests that will be executed on Windows by GitHub Actions.
+- Previous GitHub Actions Flutter SDK and Dart Pub caches remain enabled for compatible jobs. Only new/modified code should be recompiled; do not cache stale compiled EXEs.
 
-## Architectural boundary
+## Explicit implementation boundary
 
-**This release implements PART III only.** The SQL schema is actually executed and tested against a real SQLite engine in-memory. The Windows UI intentionally does *not* persist real personnel data yet: activation of a disk database is blocked pending verified encrypted SQLite and key handling (later specified persistence phases). It would be unsafe to save real individual details unencrypted merely to make this stage look functional.
+No plaintext disk database or production personnel records have been enabled. The encrypted native SQLite backend, production repositories, login/session services, operational screens, and the **encrypted archive adapter responsible for transactional snapshots and seals** are not yet implemented. This milestone establishes and tests the relevant rules, *not* an already operational automatic archival job. Without a secure database adapter the Windows foundation screen is intentionally read-only.
 
-PART IV business logic (historical force counting, transfers, monthly rollover, etc.) has **not** been built; it is intentionally separate, as requested. Authentication, real screens, backups, Excel and installer work also remain for their corresponding engineering phases.
+The business specifications of PART III remain authoritative; PART IV supplies additional invariants, not schema replacement. Before enabling production persistence, the versioned migration system must apply the PART IV overlay, and the encrypted archive adapter must atomically write person snapshots, day statuses, movements, integrity hash and sealed archive status. A failure must prevent writing a new month.
 
-## Update your private GitHub repository `Win-manger`
+## Build and acceptance gate
 
-1. Extract the **source** ZIP; upload/replace its **contents** at the root of the existing `main` branch, including hidden `.github/workflows/windows-foundation.yml`. Do not upload the source ZIP itself as a repository file.
-2. Open **Actions → Windows foundation build** and wait for a new run.
-3. Confirm the `Validate Part III SQLite tables and integrity constraints`, `Static analysis`, `Unit and widget tests`, and `Build Windows release` steps are all green.
-4. Inspect `Show dependency cache status`: a cache miss can occur when the SDK/version/hash changes; future compatible runs should reuse the cache.
-5. Download the **Altamam_AlYawmi_Part_III_Windows_x64** artifact. Inside it, extract `Altamam_AlYawmi_Part_III_Windows_x64.zip`, preserving the entire folder structure.
-6. On Windows 10/11 x64, open **التمام اليومي.exe** and confirm the title and read-only **الجزء الثالث — نموذج البيانات** screen. No personnel import should be attempted yet.
-7. Send the job result or failing-step logs. **Stop before moving to PART IV.**
+1. Extract this source ZIP and replace files at the root of private GitHub repository `Win-manger` branch `main`. **Include `.github/`**. Do not upload the ZIP as a single repository file.
+2. Open Actions → **Windows foundation build** and inspect the new run.
+3. Require successful **Validate Part III + Part IV SQLite business integrity** (Python unit tests), Flutter analysis, Flutter unit/widget tests, and Windows release build.
+4. Verify the **Show dependency cache status** step; a cache miss on changed SDK/dependency hashes is normal.
+5. Download the artifact named **Altamam_AlYawmi_Part_IV_Windows_x64**. Extract its nested ZIP, keeping the executable, DLLs and `data` directory together.
+6. Run **التمام اليومي.exe** on a Windows 10/11 x64 PC and ensure it shows the PART IV milestone header. Its interface deliberately has no personnel-entry workflows at this stage.
+7. **Do not start the next part until the run succeeds.** Send the Actions summary or the detailed error log for repair.
 
-The portable test bundle doesn't create a desktop shortcut; the later Installer will create one under the name «التمام اليومي».
-
-## Local repeatable checks (Windows development machine)
+### Optional local checks on a Windows Flutter machine
 
 ```powershell
-flutter doctor -v
-flutter config --enable-windows-desktop
+python -m unittest discover -s scripts -p 'test_*.py' -v
+python scripts/validate_contract.py
 .\scripts\prepare_windows.ps1
-python -m unittest discover -s scripts -p "test_*.py" -v
 flutter pub get
 dart format lib test
 flutter analyze
 flutter test
-python scripts/validate_contract.py
 flutter build windows --release --no-pub
 .\scripts\package_windows.ps1
 ```
 
-**Security:** Use a private GitHub repository. Never upload real personnel lists, databases, backups, encryption keys, passwords, `.env` files or other secrets. A `.gitignore` protects common sensitive paths; review `git status` before committing.
+Never commit real personnel data, unencrypted databases, backups, credentials or encryption keys. The source archive is not a license to use this milestone as a finished personnel application.
 
-For the exact table design and scope report, read `docs/DATA_MODEL.md` and `docs/PART_III_IMPLEMENTATION_REPORT.md`. The complete 43-phase redacted contract and traceability documentation remain in `docs/`.
+For requirements coverage and decisions, see `docs/PART_IV_IMPLEMENTATION_REPORT.md`.
