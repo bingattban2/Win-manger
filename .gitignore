@@ -1,0 +1,53 @@
+# Dart / Flutter generated files
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+*.iml
+.idea/
+.vscode/
+
+# Generated native build intermediate files
+windows/flutter/ephemeral/
+windows/flutter/generated_plugin_registrant.cc
+windows/flutter/generated_plugin_registrant.h
+windows/flutter/generated_plugins.cmake
+
+# Operational data, accounts, credentials, backups, and key material
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db3
+*.wal
+*.shm
+*.backup
+*.bak
+*.adwasbak
+*.key
+*.p12
+*.pfx
+*.pem
+*.env
+.env.*
+!*.env.example
+secrets/
+private/
+user_data/
+backups/
+data/
+
+# System files
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.log
+
+# Python validation cache
+__pycache__/
+*.pyc

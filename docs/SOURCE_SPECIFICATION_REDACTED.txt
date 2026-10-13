@@ -1,0 +1,3117 @@
+MASTER SOFTWARE ENGINEERING IMPLEMENTATION SPECIFICATION
+
+Complete Offline Flutter Windows Personnel Administration and Monthly Force Accountability System
+
+Exhaustive Implementation Contract — 43 Sequential Engineering Phases
+
+---
+
+PART I — EXECUTION AUTHORITY AND PROJECT CONTRACT
+
+1. ROLE AND RESPONSIBILITY
+
+Act as an integrated senior software engineering team with expertise in:
+
+- Flutter Windows Desktop and Dart
+- Clean Architecture and Domain-Driven Design
+- SQLite, Drift ORM, and encrypted databases
+- Windows native APIs and background scheduling
+- Personnel administration and workforce accounting
+- Historical event modeling and temporal databases
+- Role-based authorization and offline authentication
+- Large-scale spreadsheet processing
+- Arabic RTL desktop interface engineering
+- Database backup, restoration, and disaster recovery
+- Software testing, CI/CD, and Windows packaging
+- Security engineering and performance optimization
+
+You are responsible for implementing a complete, operational Windows desktop application from an empty repository through verified production releases.
+
+This assignment requires executable software, not an architectural proposal or a collection of example code snippets.
+
+2. NON-NEGOTIABLE REQUIREMENTS
+
+1. Build the application using Flutter Desktop and Dart.
+2. Target Microsoft Windows.
+3. Use a private GitHub repository.
+4. Operate entirely offline after installation.
+5. Store all personnel and operational data locally.
+6. Never depend on Firebase, Supabase, a web API, or an external database.
+7. Encrypt the local database.
+8. Support an Installer and a Portable distribution.
+9. Preserve every feature specified in this document.
+10. Implement all screens with real business logic.
+11. Keep a permanent historical record of personnel movements.
+12. Maintain correct workforce counts at every stage.
+13. Support complete Arabic RTL operation.
+14. Build and test features sequentially.
+15. Never remove previous functionality to implement a new feature.
+16. Never declare a phase complete before verifying it.
+17. Never create simulated buttons or nonfunctional screens in the final release.
+18. Never claim successful tests without actual execution evidence.
+19. Never replace a required feature with an undocumented alternative.
+20. Never silently skip an exceptional workflow.
+
+The application must remain functional when all outbound network access is disabled.
+
+GitHub is used for source control and development automation only.
+
+No production personnel database may be uploaded to GitHub.
+
+---
+
+PART II — FIXED BUSINESS TERMINOLOGY
+
+3. ARABIC TERMINOLOGY
+
+Preserve these Arabic concepts and labels throughout the application.
+
+English domain name| Required Arabic terminology
+Personnel| الأفراد
+Personnel number| الرقم (ع)
+Site| الموقع
+Force strength| القوة
+Present| موجود
+Leave| إجازة
+Absent| غياب
+Permission| إذن
+Daily preparation| التحضير
+Monthly accountability| التمام الشهري
+Internal transfer| النقل الداخلي
+External transfer| النقل الخارجي
+Dismissal| الفصل
+Dismissed| مفصول
+Archive| الأرشيف
+User management| إدارة المستخدمين
+General administration| الإدارة العامة
+Ordinary administration| الإدارة العادية
+Supervisors| المشرفين
+Undefined site| غير محدد
+
+Do not randomly substitute terminology.
+
+The personnel number "الرقم (ع)" is a business identifier and must be preserved exactly in Arabic user-facing screens.
+
+---
+
+PART III — EXACT BUSINESS DATA MODEL
+
+4. PERMANENT PERSONNEL IDENTIFICATION
+
+Each person must have two separate identifiers.
+
+4.1 Internal Identifier
+
+An immutable "person_id", preferably UUID or another safe stable identifier.
+
+Used by:
+
+- Database relationships
+- Attendance
+- Transfers
+- Dismissals
+- Accounts
+- Reports
+- Audit logs
+- Archives
+
+Never use the person's displayed name as a relational identifier.
+
+4.2 Personnel Number
+
+The field "الرقم (ع)".
+
+Stored as TEXT, not an integer.
+
+Reasons:
+
+- Preserve leading zeros.
+- Avoid Excel numeric precision loss.
+- Permit exact matching.
+- Support future corrections.
+- Preserve historical references.
+
+Implement separate original and normalized representations when necessary.
+
+Arabic and Western digits should be normalized for searching and duplicate detection while preserving the intended display value.
+
+Reject duplicate normalized personnel numbers across existing personnel identities, including archived, dismissed, or externally transferred persons.
+
+Never silently create a second person identity from the same personnel number.
+
+---
+
+5. REQUIRED DATABASE TABLES
+
+Implement a normalized database, including at least the following logical tables.
+
+5.1 "persons"
+
+Required fields:
+
+- "id"
+- "personnel_number"
+- "normalized_personnel_number"
+- "full_name"
+- "normalized_name"
+- "lifecycle_status"
+- "created_at"
+- "created_by"
+- "updated_at"
+- "updated_by"
+
+Do not store attendance status as the only source of the person's current state.
+
+5.2 "person_identity_history"
+
+Fields:
+
+- "id"
+- "person_id"
+- "old_name"
+- "new_name"
+- "old_personnel_number"
+- "new_personnel_number"
+- "changed_at"
+- "changed_by"
+- "audit_event_id"
+
+5.3 "sites"
+
+Fields:
+
+- "id"
+- "name"
+- "normalized_name"
+- "is_system_site"
+- "is_active"
+- "created_at"
+- "updated_at"
+
+Seed the protected system site:
+
+"غير محدد"
+
+It cannot be renamed or deleted.
+
+5.4 "site_name_history"
+
+Fields:
+
+- "id"
+- "site_id"
+- "old_name"
+- "new_name"
+- "effective_date"
+- "changed_at"
+- "changed_by"
+
+5.5 "person_site_assignments"
+
+Fields:
+
+- "id"
+- "person_id"
+- "site_id"
+- "effective_from"
+- "effective_to_exclusive"
+- "assignment_reason"
+- "created_at"
+- "created_by"
+
+Use non-overlapping validity intervals.
+
+The assignment active for a business date D is:
+
+"effective_from <= D < effective_to_exclusive"
+
+A null end date means the assignment has no recorded end date.
+
+5.6 "attendance_statuses"
+
+Fields:
+
+- "id"
+- "name"
+- "short_code"
+- "color_argb"
+- "display_order"
+- "is_system_status"
+- "is_active"
+- "created_at"
+- "updated_at"
+
+Seed:
+
+- موجود / م / light blue
+- إجازة / ج / green
+- غياب / غ / red
+- إذن / إ / yellow
+
+Use clearly defined ARGB colors and store them centrally.
+
+5.7 "attendance_status_history"
+
+Preserve previous:
+
+- Names
+- Codes
+- Colors
+- Effective metadata changes
+
+This avoids corrupting the interpretation of historic attendance records.
+
+5.8 "daily_attendance"
+
+Fields:
+
+- "id"
+- "person_id"
+- "attendance_date"
+- "effective_site_id"
+- "status_id"
+- "prepared_by"
+- "prepared_at"
+- "updated_by"
+- "updated_at"
+- "revision"
+
+Enforce:
+
+"UNIQUE(person_id, attendance_date)"
+
+A person cannot possess two conflicting official attendance states for the same date.
+
+Transfer markers must not be stored as competing attendance states.
+
+5.9 "attendance_revision_history"
+
+Capture:
+
+- Person
+- Date
+- Old status
+- New status
+- Previous site
+- Effective site
+- Operator
+- Modification timestamp
+- Related audit event
+
+5.10 "internal_transfers"
+
+Fields:
+
+- "id"
+- "person_id"
+- "from_site_id"
+- "to_site_id"
+- "effective_date"
+- "executed_at"
+- "executed_by"
+- "operation_group_id"
+
+5.11 "external_transfers"
+
+Fields:
+
+- "id"
+- "person_id"
+- "previous_site_id"
+- "external_destination"
+- "effective_date"
+- "executed_at"
+- "executed_by"
+
+5.12 "dismissals"
+
+Fields:
+
+- "id"
+- "person_id"
+- "previous_site_id"
+- "reason"
+- "effective_date"
+- "executed_at"
+- "executed_by"
+
+5.13 "attribute_definitions"
+
+Fields:
+
+- "id"
+- "internal_key"
+- "display_name"
+- "data_type"
+- "display_order"
+- "is_visible"
+- "is_active"
+- "created_at"
+
+5.14 "person_attribute_values"
+
+Fields:
+
+- "person_id"
+- "attribute_id"
+- "value"
+- "updated_at"
+
+Define uniqueness over the person and attribute pair.
+
+5.15 "monthly_archives"
+
+Fields:
+
+- "id"
+- "year"
+- "month"
+- "archive_version"
+- "closed_at"
+- "closed_by_system"
+- "integrity_hash"
+- "is_sealed"
+
+Enforce uniqueness of the archived calendar month.
+
+5.16 "monthly_archive_persons"
+
+Store the historical identity and relevant site participation for each archived person.
+
+5.17 "monthly_archive_days"
+
+Store immutable day-level historical states and transfer/dismissal markers.
+
+5.18 "app_users"
+
+Fields:
+
+- "id"
+- "username"
+- "normalized_username"
+- "person_id"
+- "role"
+- "password_hash"
+- "is_active"
+- "is_deleted"
+- "created_by"
+- "created_at"
+- "updated_at"
+
+The predefined foundational administrator is exempt from personnel association.
+
+5.19 "audit_events"
+
+Fields:
+
+- "id"
+- "operation_type"
+- "target_type"
+- "target_id"
+- "target_display_name"
+- "actor_user_id"
+- "executed_at"
+- "effective_date"
+- "old_values"
+- "new_values"
+- "operation_group_id"
+- "result"
+- "previous_hash"
+- "event_hash"
+
+5.20 Supporting Tables
+
+Implement:
+
+- "authentication_events"
+- "import_batches"
+- "import_rejected_rows"
+- "export_history"
+- "backup_history"
+- "scheduled_backup_state"
+- "application_settings"
+- "schema_migrations"
+
+Additional tables may be introduced if required by a concrete feature.
+
+---
+
+PART IV — DATABASE INTEGRITY AND BUSINESS RULES
+
+6. NO PHYSICAL DELETION OF HISTORICAL PERSONNEL
+
+Dismissal and external transfer remove people from active-force queries.
+
+They do not destroy their records.
+
+Use logical lifecycle transitions.
+
+Examples:
+
+- ACTIVE
+- EXTERNALLY_TRANSFERRED
+- DISMISSED
+
+This internal model must not prevent the original Arabic interface behavior.
+
+A person's historic name, attendance, previous sites, and movements must remain retrievable.
+
+---
+
+7. FORCE COUNTING RULES
+
+For date D and site S:
+
+"eligible_force(D,S)"
+
+means the number of distinct persons actively assigned to S on D and not already removed by an external departure or dismissal effective on or before D.
+
+For attendance statuses:
+
+"status_count(D,S,status)"
+
+means the number of eligible people having that official status on D.
+
+For pending preparation:
+
+"unprepared(D,S)"
+
+means eligible people without a recorded official attendance state on D.
+
+Required invariant:
+
+"eligible_force = sum(all configured attendance status counts) + unprepared"
+
+Do not treat unprepared personnel as absent.
+
+Do not count an individual twice because the monthly grid displays a movement notification in two sites.
+
+Dashboard counts must be based on distinct eligible people, not on the number of rendered monthly rows.
+
+Historical daily totals must use the assignments and lifecycle events effective on that historical date, not merely the person's current site.
+
+---
+
+8. MONTHLY TRANSFER REPRESENTATION
+
+Transfers are administrative events.
+
+They are not replacements for attendance records.
+
+Suppose person P transfers:
+
+From Site A to Site B on date D.
+
+Required behavior:
+
+Before D
+
+- Site A displays historical daily attendance.
+- Site B displays empty cells for P.
+- P counts under Site A.
+
+On D
+
+Site A displays:
+
+"تم نقله للموقع (Site B)"
+
+Site B displays:
+
+"تم نقله من (Site A)"
+
+If P has an official attendance status on D, Site B must also display that status in the same date cell, either through a structured two-line cell or a clearly associated transfer annotation.
+
+Do not overwrite the attendance status with a transfer label.
+
+Count P exactly once under Site B on D.
+
+After D
+
+- Site A must not generate further attendance cells for P.
+- Site B continues attendance normally.
+- Site A retains previous historical values.
+- Site B shows no fabricated attendance before D.
+
+Repeated Transfers
+
+Support multiple transfers in the same month.
+
+Each effective date creates a new assignment interval.
+
+Never overwrite old transfers.
+
+If two operations conflict, validate them before committing.
+
+Use one deterministic rule for same-day transfer conflicts, preventing simultaneous contradictory site memberships.
+
+---
+
+9. MONTHLY DEPARTURE AND DISMISSAL REPRESENTATION
+
+When a person is dismissed:
+
+- Remove the individual from the active force.
+- Preserve all previous attendance records.
+- Display "مفصول" on the dismissal date in the monthly historical participation view.
+- Do not create attendance after dismissal.
+- Keep the individual available in the dismissal archive.
+- Keep the person included in archived historic months where they served.
+
+When externally transferred:
+
+- Remove the person from the active force.
+- Preserve the previous service history.
+- Preserve the transfer destination.
+- Preserve the effective transfer date.
+- Keep the individual in the external-transfer archive.
+- Do not generate future attendance after departure.
+
+The active personnel registry and the active month's historical accountability projection may have different inclusion rules.
+
+This is intentional.
+
+Do not incorrectly remove a person's earlier monthly attendance simply because they are no longer active today.
+
+---
+
+10. DATE AND TIME RULES
+
+Use a single centralized date service.
+
+Store business dates as Gregorian civil dates without a time-of-day component.
+
+Store operation timestamps in UTC and convert them to the local display timezone when rendering.
+
+Use Arabic weekday labels.
+
+Automatically calculate:
+
+- 28-day months
+- 29-day February
+- 30-day months
+- 31-day months
+
+The application must handle the configured Windows local timezone consistently.
+
+No daily attendance must be copied from the previous month into the new month.
+
+When the month changes:
+
+1. Detect the previous month.
+2. Verify whether it is archived.
+3. Archive it exactly once.
+4. Seal the archive.
+5. Open the new active month.
+6. Leave new daily attendance unprepared.
+7. Refresh dashboard and monthly-grid projections.
+
+If the program was closed at the month boundary, perform this operation at the next launch before permitting modifications to the new month.
+
+Do not silently modify sealed historical months.
+
+---
+
+PART V — COMPLETE ACCOUNT AND PERMISSION POLICY
+
+11. GENERAL ADMINISTRATOR
+
+Create the initial account:
+
+Username:
+
+"adwas"
+
+Password:
+
+"<REDACTED_FOUNDATIONAL_PASSWORD>"
+
+Mandatory requirements:
+
+- Preserve these exact credentials.
+- Do not require changing the initial password.
+- Do not implement forced rotation for this account.
+- Do not display login hints.
+- Do not expose the credentials through the application interface.
+- Store a salted, nonreversible password verifier.
+- Do not store the password as plaintext inside the production database.
+- Do not print the password in diagnostic logs.
+- Protect authentication from rapid repeated guessing.
+
+The private repository is not a sufficient security boundary for distributed executables.
+
+Where possible, provision the initial password verifier using protected release configuration.
+
+A verified precomputed salted password hash is also acceptable if correctly generated and no plaintext password is embedded in the shipped application logic.
+
+The fixed initial credential requirement takes precedence over proposals to force first-run password replacement.
+
+Protect the foundational administrator account against accidental deletion and loss of all administrative access.
+
+---
+
+12. ROLE PERMISSION MATRIX
+
+Operation| General Admin| Ordinary Admin| Supervisor
+Dashboard| Yes| Yes| Yes
+Monthly accountability| Yes| Yes| Yes
+Archives| Yes| Yes| Yes
+Daily preparation| Yes| Yes| Yes
+Internal transfer| Yes| Yes| Yes
+External transfer| Yes| Yes| Yes
+Dismissal| Yes| Yes| Yes
+Personnel editing| Yes| Yes| Yes
+Status management| Yes| Yes| Yes
+Site management| Yes| Yes| Yes
+Excel import/export| Yes| Yes| Yes
+Reports| Yes| Yes| Yes
+Audit viewing| Yes| Yes| Yes
+Normal settings operations| Yes| Yes| Yes
+Backup/restore| Yes| Yes| Yes
+Add ordinary administrators| Yes| No| No
+Manage ordinary administrators| Yes| No| No
+Add supervisors| Yes| Yes| No
+Manage supervisors| Yes| Yes| No
+User management screen| Full| Supervisors only| Hidden
+
+Do not add undocumented restrictions to the normal operational capabilities of supervisors.
+
+All destructive operations must retain their separately defined password-confirmation safeguards.
+
+Authorization must be enforced in the application/domain service layer, not merely through hidden navigation buttons.
+
+---
+
+PART VI — APPLICATION ARCHITECTURE
+
+13. PROJECT STRUCTURE
+
+Use a maintainable Flutter project layout, approximately:
+
+project/
+  .github/
+    workflows/
+  lib/
+    main.dart
+    bootstrap/
+    app/
+      navigation/
+      localization/
+      theme/
+      widgets/
+    core/
+      errors/
+      security/
+      database/
+      dates/
+      search/
+      audit/
+      transactions/
+      platform/
+      files/
+    features/
+      authentication/
+      dashboard/
+      personnel/
+      sites/
+      statuses/
+      imports/
+      exports/
+      preparation/
+      monthly_accountability/
+      internal_transfers/
+      external_transfers/
+      dismissals/
+      archives/
+      reports/
+      users/
+      backups/
+      settings/
+  test/
+    unit/
+    widget/
+    integration/
+    fixtures/
+  integration_test/
+  windows/
+  scripts/
+  docs/
+
+Within every feature, separate:
+
+- Presentation
+- Application services
+- Domain rules
+- Repository contracts
+- Repository implementations
+
+The UI must not directly execute database mutations.
+
+---
+
+14. MANDATORY OPERATION PIPELINE
+
+Every state-changing user action must follow:
+
+1. User initiates an action.
+2. UI collects required input.
+3. Input is normalized.
+4. Input is validated.
+5. The current session is verified.
+6. Authorization is verified.
+7. Current database records are loaded.
+8. Business preconditions are checked.
+9. The system prepares an explicit operation preview.
+10. The user confirms when required.
+11. A database transaction begins.
+12. Authoritative records are updated.
+13. Related historical records are appended.
+14. An audit event is appended.
+15. Invariants are verified.
+16. The transaction commits.
+17. Affected application state is invalidated/refreshed.
+18. The UI displays the result.
+
+If an error occurs before commit, roll back.
+
+Never show success before commit.
+
+Do not independently update UI totals with guessed arithmetic.
+
+Refresh totals from authoritative database queries.
+
+---
+
+PART VII — DETAILED CONTINUOUS DEVELOPMENT PHASES
+
+The following 43 phases are mandatory.
+
+Every phase depends on the verified foundations established by previous phases.
+
+---
+
+PHASE 00 — REQUIREMENTS ANALYSIS AND TRACEABILITY
+
+Purpose:
+
+Transform this contract into implementable and testable engineering requirements.
+
+Implementation:
+
+1. Parse every section into atomic requirements.
+2. Assign requirement IDs.
+3. Classify each as UI, business, database, security, import/export, operating-system, or deployment requirement.
+4. Identify each screen's user-visible operations.
+5. Identify all data mutations performed by each operation.
+6. Identify cross-module dependencies.
+7. Create the full role-permission matrix.
+8. Create a calendar and effective-date behavior matrix.
+9. Create a failure and recovery matrix.
+10. Define acceptance tests for every requirement.
+11. Define dependencies between phases.
+12. Create a requirements-to-test matrix.
+13. Establish project naming and versioning conventions.
+
+Required files:
+
+- "docs/REQUIREMENTS.md"
+- "docs/BUSINESS_RULES.md"
+- "docs/DATA_MODEL.md"
+- "docs/SCREEN_SPECIFICATIONS.md"
+- "docs/PERMISSIONS.md"
+- "docs/TRACEABILITY_MATRIX.md"
+- "docs/TEST_PLAN.md"
+
+Completion condition:
+
+Every requested function has a requirement ID and measurable acceptance criteria.
+
+---
+
+PHASE 01 — WINDOWS DEVELOPMENT ENVIRONMENT
+
+Purpose:
+
+Create a reproducible Flutter Windows toolchain.
+
+Implementation:
+
+1. Verify a stable Flutter SDK.
+2. Verify matching Dart SDK.
+3. Verify Visual Studio C++ build tools.
+4. Verify Windows SDK compatibility.
+5. Run Flutter environment diagnostics.
+6. Enable Windows desktop support.
+7. Create the Flutter project.
+8. Configure Windows executable metadata.
+9. Configure project application identifiers.
+10. Configure development, testing, and release settings.
+11. Add source formatting rules.
+12. Add static analysis rules.
+13. Add package version constraints.
+14. Create a ".gitignore".
+15. Initialize the private repository.
+16. Commit the foundation.
+
+Verification commands must include:
+
+- "flutter doctor -v"
+- "flutter pub get"
+- "flutter analyze"
+- "flutter test"
+- "flutter run -d windows"
+
+Completion condition:
+
+The initial desktop application launches successfully.
+
+---
+
+PHASE 02 — ARCHITECTURE, DEPENDENCY INJECTION, AND STATE MANAGEMENT
+
+Purpose:
+
+Establish reusable architectural infrastructure.
+
+Implementation:
+
+1. Configure a single state-management framework, such as Riverpod.
+2. Configure a router appropriate for Flutter Desktop.
+3. Create feature-specific providers/controllers.
+4. Create service interfaces.
+5. Create repository interfaces.
+6. Configure dependency injection.
+7. Create a unified result/error model.
+8. Implement asynchronous operation states.
+9. Implement cancellable background tasks.
+10. Implement structured diagnostic logging.
+11. Create a centralized application configuration service.
+12. Configure proper state disposal.
+13. Ensure errors do not crash the entire application.
+14. Add unit tests for dependency resolution.
+
+Completion condition:
+
+A demonstration flow runs through UI, controller, service, and repository boundaries without architectural violations.
+
+---
+
+PHASE 03 — WINDOWS STORAGE, PROCESS LIFECYCLE, AND FILE PATHS
+
+Purpose:
+
+Create reliable Windows-specific behavior.
+
+Implementation:
+
+1. Determine the application installation directory.
+2. Determine the data directory.
+3. Determine the backup directory.
+4. Determine temporary working directories.
+5. Use Windows-supported user-writable storage.
+6. Do not write mutable databases inside protected installation folders.
+7. Detect whether a directory is writable.
+8. Support ordinary user permissions.
+9. Implement single-instance handling for a shared database.
+10. Prevent two processes from modifying the same data store inconsistently.
+11. Implement graceful application shutdown.
+12. Release SQLite connections properly.
+13. Clean expired temporary files safely.
+14. Preserve user data during application upgrades.
+
+Portable behavior:
+
+- Use a writable portable data directory when appropriate.
+- Fall back to an explicitly reported user-writable path if the portable folder is read-only.
+- Do not require administrative privileges.
+- Preserve data location consistently across restarts.
+- Support offline recovery when the portable folder is moved to another computer.
+
+Completion condition:
+
+Storage works for both an installed application and a portable application.
+
+---
+
+PHASE 04 — ENCRYPTED SQLITE ENGINE
+
+Purpose:
+
+Create the encrypted persistence foundation.
+
+Implementation:
+
+1. Add Drift.
+2. Add the supported native SQLite implementation.
+3. Configure SQLite3MultipleCiphers or another verified SQLCipher-compatible native backend.
+4. Confirm that the selected backend works on Windows.
+5. Create encrypted database initialization.
+6. Generate a unique database encryption key.
+7. Protect the local key with Windows-supported secure storage.
+8. Build key retrieval and failure handling.
+9. Implement offline recovery-key protection.
+10. Initialize encryption before any application query.
+11. Validate cipher support at runtime in release builds.
+12. Reject silent fallback to unencrypted SQLite.
+13. Enable foreign-key enforcement.
+14. Configure appropriate journal behavior.
+15. Configure database busy handling.
+16. Use background execution where suitable.
+17. Test encryption and decryption.
+18. Test invalid-key behavior.
+
+Completion condition:
+
+The database persists encrypted records and cannot be read by an ordinary unencrypted SQLite connection.
+
+---
+
+PHASE 05 — COMPLETE DRIFT DATABASE SCHEMA
+
+Purpose:
+
+Implement the schema defined in Part III.
+
+Implementation:
+
+1. Create Drift table classes.
+2. Define stable internal primary keys.
+3. Implement foreign-key relationships.
+4. Define uniqueness rules.
+5. Add appropriate indexes.
+6. Create entity converters.
+7. Create repositories.
+8. Implement database seed data.
+9. Generate Drift code.
+10. Test CRUD behavior.
+11. Test referential integrity.
+12. Test duplicate prevention.
+13. Test transaction rollbacks.
+14. Test full database reopening after restart.
+
+Completion condition:
+
+All core tables exist and all relationship constraints pass.
+
+---
+
+PHASE 06 — DATABASE MIGRATION SYSTEM
+
+Purpose:
+
+Prevent data loss during future updates.
+
+Implementation:
+
+1. Establish a schema version number.
+2. Create deterministic migration procedures.
+3. Create migrations for new tables.
+4. Create migrations for new indexes.
+5. Create migrations for modified constraints.
+6. Handle migration failures.
+7. Validate schema after migration.
+8. Test migrations using actual previous schemas.
+9. Preserve encrypted database compatibility.
+10. Maintain migration tests as permanent regression tests.
+11. Prevent unsupported application downgrades from silently corrupting a newer database.
+
+Completion condition:
+
+Older supported databases can be upgraded without losing personnel records.
+
+---
+
+PHASE 07 — TEMPORAL ENGINE AND FORCE CALCULATION SERVICES
+
+Purpose:
+
+Implement the most important shared business calculations before UI development.
+
+Implement services such as:
+
+- "PersonnelLifecycleService"
+- "SiteAssignmentService"
+- "AttendanceCalculationService"
+- "ForceStatisticsService"
+- "MonthlyProjectionService"
+- "DateBoundaryService"
+
+Required algorithms:
+
+Resolve Site on Date
+
+Input:
+
+"person_id, business_date"
+
+Procedure:
+
+1. Query assignment intervals for the person.
+2. Find the interval containing the date.
+3. Reject multiple overlapping valid intervals.
+4. Return the effective site.
+5. Return no assignment when the person was not assigned on that date.
+
+Resolve Force Eligibility
+
+Input:
+
+"person_id, date"
+
+Procedure:
+
+1. Verify the person's admission/assignment is effective.
+2. Check external transfer effective date.
+3. Check dismissal effective date.
+4. Determine whether the person belongs to the active force on the requested date.
+
+Resolve Daily Attendance
+
+Input:
+
+"person_id, date"
+
+Procedure:
+
+1. Determine eligibility.
+2. Determine effective site.
+3. Fetch the official daily attendance record.
+4. Fetch movement markers independently.
+5. Return an explicit presentation model.
+
+Aggregate Dashboard
+
+1. Determine eligible person IDs.
+2. Group recorded statuses.
+3. Calculate unprepared people separately.
+4. Ensure the total reconciles.
+5. Return results for the requested site and date.
+
+Tests:
+
+- Transfer on first day of month.
+- Transfer on last day.
+- Multiple transfers.
+- Dismissal mid-month.
+- External transfer mid-month.
+- Missing attendance.
+- Previous month statistics.
+
+Completion condition:
+
+Domain calculations remain correct without any UI.
+
+---
+
+PHASE 08 — AUDIT ENGINE
+
+Purpose:
+
+Create a mandatory shared logging foundation.
+
+Implementation:
+
+1. Implement audit event models.
+2. Capture authenticated actor.
+3. Capture operation type.
+4. Capture target person/entity.
+5. Capture old and new values where relevant.
+6. Capture execution timestamp.
+7. Capture effective business date.
+8. Capture grouped-operation identifiers.
+9. Store events through controlled append-only methods.
+10. Disallow normal audit update/delete methods.
+11. Add tamper-evident hash-chain support.
+12. Verify hash-chain continuity.
+13. Store sufficient target-display information to search events even after a person's departure or account deletion.
+14. Implement paginated audit queries.
+15. Test audit insertion with every transactional mutation.
+
+Completion condition:
+
+No successful business mutation can bypass audit recording.
+
+---
+
+PHASE 09 — LOGIN, AUTHENTICATION, AND SESSION SECURITY
+
+Purpose:
+
+Implement full offline authentication.
+
+User workflow:
+
+1. User opens the application.
+2. Login screen appears.
+3. User enters username.
+4. User enters password.
+5. User presses Login.
+6. The application normalizes the username.
+7. The authentication service retrieves the account.
+8. The password is verified against the stored hash.
+9. The account status is checked.
+10. Failed attempts are handled safely.
+11. Successful login creates a local session.
+12. The appropriate navigation is displayed.
+
+Implementation:
+
+1. Provision the predefined general administrator.
+2. Preserve its exact required credentials.
+3. Implement secure password hashing.
+4. Implement constant-time verifier handling through the selected cryptographic library.
+5. Implement account lookup.
+6. Implement failed-login throttling.
+7. Record authentication events.
+8. Implement session expiration.
+9. Implement inactivity monitoring.
+10. Auto-lock after a configurable inactivity duration, defaulting to 10 minutes.
+11. Require password reentry to unlock.
+12. Preserve current navigation and unsaved UI context safely where possible.
+13. Implement logout.
+14. Clear sensitive in-memory session state.
+15. Recheck account status for sensitive operations.
+
+Completion condition:
+
+Authentication and session security work completely offline.
+
+---
+
+PHASE 10 — ARABIC RTL DESIGN SYSTEM
+
+Purpose:
+
+Create the reusable visual foundation.
+
+Implementation:
+
+1. Configure global RTL.
+2. Include a locally bundled Arabic font.
+3. Create a desktop sidebar.
+4. Create the header and title system.
+5. Create reusable tables.
+6. Create reusable status cells.
+7. Create filter controls.
+8. Create search fields.
+9. Create autocomplete dropdowns.
+10. Create confirmation dialogs.
+11. Create warning dialogs.
+12. Create countdown buttons.
+13. Create progress indicators.
+14. Create loading states.
+15. Create error states.
+16. Create empty-data states.
+17. Create breadcrumbs or equivalent navigation context.
+18. Implement clear focus outlines.
+19. Implement keyboard shortcuts.
+20. Test scaling and window resizing.
+21. Verify mixed Arabic and numerical text rendering.
+22. Keep all interface assets local.
+
+Completion condition:
+
+All shared components display correctly on Windows without using online assets.
+
+---
+
+PHASE 11 — SITE MANAGEMENT
+
+Purpose:
+
+Implement site creation, renaming, and deletion.
+
+Site Creation
+
+User workflow:
+
+1. Open Administration.
+2. Open Status and Site Management.
+3. Select Sites.
+4. Press Add.
+5. Enter site name.
+6. Press Confirm.
+
+Backend:
+
+1. Trim and normalize the name.
+2. Reject empty values.
+3. Detect duplicate normalized site names.
+4. Insert the site.
+5. Create audit event.
+6. Refresh site dropdowns everywhere.
+
+Rename Site
+
+1. Select the site.
+2. Enter a new name.
+3. Validate uniqueness.
+4. Update current metadata.
+5. Store previous name in site history.
+6. Preserve historical archive snapshots.
+7. Refresh active screens.
+
+Delete Site
+
+1. Select a site.
+2. Reject deletion of "غير محدد".
+3. Count currently assigned people.
+4. Display confirmation.
+5. Begin a transaction.
+6. Close affected active assignment intervals at the effective deletion date.
+7. Create replacement assignments to "غير محدد".
+8. Deactivate the deleted site.
+9. Preserve historical site information.
+10. Audit the operation.
+11. Recalculate current force totals.
+
+Completion condition:
+
+Deleting a site never leaves current personnel without an assignment or destroys historical site records.
+
+---
+
+PHASE 12 — ATTENDANCE STATUS MANAGEMENT
+
+Purpose:
+
+Implement default and custom status administration.
+
+Initialization
+
+Create:
+
+- موجود / م / light blue
+- إجازة / ج / green
+- غياب / غ / red
+- إذن / إ / yellow
+
+Add Status
+
+1. User presses Add.
+2. Enters full status name.
+3. Enters abbreviation.
+4. Selects color.
+5. Confirms.
+6. Service validates name and code.
+7. Prevents ambiguous duplicate active codes.
+8. Stores the status.
+9. Assigns the next display order.
+10. Updates dashboard category definitions.
+11. Updates preparation choices.
+12. Updates monthly-grid rendering.
+13. Updates reports and export styles.
+
+Modify Status
+
+1. Validate requested changes.
+2. Preserve identity through "status_id".
+3. Store historical metadata.
+4. Update active presentation metadata.
+5. Preserve sealed archive snapshots.
+6. Audit modification.
+
+Remove Status
+
+Do not physically destroy a status referenced by existing records.
+
+Deactivate it for future preparation while preserving historical records.
+
+Completion condition:
+
+Adding a new status requires no code modifications to dashboard counters or reporting logic.
+
+---
+
+PHASE 13 — PERSONNEL REGISTRY
+
+Purpose:
+
+Create the complete authoritative personnel model and browsing operations.
+
+Implementation:
+
+1. Build personnel repository.
+2. Create personnel list UI.
+3. Display sequential numbering.
+4. Display personnel number.
+5. Display full name.
+6. Display current site.
+7. Display active dynamic attributes.
+8. Support sorting.
+9. Support filtering.
+10. Support search.
+11. Support large datasets.
+12. Preserve stable person IDs.
+13. Validate personnel identity.
+14. Prevent duplicate personnel numbers.
+15. Exclude externally transferred and dismissed individuals from active force lists.
+16. Retain those individuals in history and their respective archives.
+17. Support a protected detail view showing current and historical information.
+18. Avoid duplicating personnel records across sites.
+
+Completion condition:
+
+Every person has one authoritative internal identity regardless of later site transfers.
+
+---
+
+PHASE 14 — AUTOMATIC EXCEL IMPORT
+
+Purpose:
+
+Import ordinary personnel lists with minimal manual configuration.
+
+User workflow:
+
+1. Open Administration.
+2. Open Personnel Lists.
+3. Choose Automatic Import.
+4. Select an Excel file using the native file picker.
+5. The system reads workbook metadata.
+6. The system identifies supported personnel columns.
+7. The system previews the detected list.
+8. The user confirms import.
+9. The system processes valid and invalid rows.
+10. The system displays a detailed result summary.
+
+Backend algorithm:
+
+1. Validate file extension and actual file format.
+2. Validate workbook readability.
+3. Identify required fields.
+4. Parse name, personnel number, and site.
+5. Normalize identifiers.
+6. Detect empty required fields.
+7. Detect duplicate IDs within the file.
+8. Detect conflicts with existing personnel.
+9. Detect matching sites.
+10. Prepare new sites where required.
+11. Stage valid rows.
+12. Stage rejected rows with exact reasons.
+13. Show pre-import statistics.
+14. On confirmation, transactionally create required sites and valid persons.
+15. Preserve failed-row explanations.
+16. Write audit and import batch records.
+17. Refresh personnel registry and Dashboard.
+
+Duplicate rule:
+
+If two source rows contain the same normalized personnel number but conflicting identities, reject the conflicting source group and explicitly identify its rows.
+
+If an incoming row conflicts with an existing stored person, reject that incoming row without altering the existing person.
+
+Do not reject unrelated valid rows.
+
+Never silently overwrite existing personnel.
+
+Completion condition:
+
+Repeated imports never create duplicate person identities.
+
+---
+
+PHASE 15 — SMART EXCEL IMPORT
+
+Purpose:
+
+Allow flexible imports from different workbook structures.
+
+User workflow:
+
+1. Press Smart Import.
+2. Select workbook.
+3. Select a worksheet if multiple exist.
+4. Inspect detected columns.
+5. Select desired columns.
+6. Map required identity columns.
+7. Map site column where available.
+8. Preview values.
+9. See new dynamic columns.
+10. See proposed new sites.
+11. See validation errors.
+12. Press Import.
+13. Review final results.
+
+Backend:
+
+1. Parse worksheet metadata.
+2. Detect column headers.
+3. Build a source-to-target mapping.
+4. Validate that person identification is sufficient.
+5. Treat missing optional site data as "غير محدد".
+6. Match existing attribute definitions.
+7. Create definitions for newly selected custom columns.
+8. Normalize personnel identifiers.
+9. Detect duplicates and conflicts.
+10. Prepare insert operations.
+11. Preserve selected custom values.
+12. Create missing sites.
+13. Execute accepted operations transactionally.
+14. Record rejected rows.
+15. Audit the complete import.
+
+Protect Excel import from:
+
+- Formula cells producing unexpected types.
+- Numeric precision loss.
+- Blank rows.
+- Duplicate headers.
+- Malformed workbooks.
+- Excessively large files.
+- Unsupported values.
+
+Completion condition:
+
+Custom Excel columns become usable without editing the database schema.
+
+---
+
+PHASE 16 — DYNAMIC PERSONNEL ATTRIBUTES AND COLUMN LAYOUT
+
+Purpose:
+
+Implement configurable fields and the Personnel List Layout screen.
+
+Operations:
+
+Add Column
+
+1. User enters column name.
+2. Application validates uniqueness and reserved core names.
+3. Create a dynamic attribute definition.
+4. Add it to list presentation.
+5. Include it in applicable exports.
+
+Rename Column
+
+1. Select column.
+2. Enter new label.
+3. Validate label.
+4. Update the display name.
+5. Preserve stable attribute ID.
+6. Automatically reflect the new label in active lists and reports.
+
+Do not rewrite business calculations using textual name replacement.
+
+Remove Column
+
+1. Select optional column.
+2. Confirm.
+3. Hide or deactivate the attribute definition.
+4. Preserve existing stored values and historical meaning.
+
+Reorder Columns
+
+1. Display reorderable column controls.
+2. Allow reordering of the four mandatory pinned identity columns.
+3. Preserve the pinned group.
+4. Save the preferred order.
+5. Refresh relevant views.
+
+Completion condition:
+
+Adding, renaming, removing, or reordering displayed columns cannot break imports, reports, or monthly calculations.
+
+---
+
+PHASE 17 — SHARED SEARCH AND FILTER ENGINE
+
+Purpose:
+
+Implement one reusable indexed search engine.
+
+Algorithm:
+
+1. Accept typed query.
+2. Trim unnecessary whitespace.
+3. Normalize Arabic letter variations for search.
+4. Normalize Arabic/Western digits.
+5. Debounce input.
+6. Cancel stale requests.
+7. Execute indexed local queries.
+8. Rank exact personnel-number matches first.
+9. Rank exact name matches next.
+10. Rank prefix and partial matches afterward.
+11. Return bounded suggestions.
+12. Display full name, personnel number, and relevant site.
+13. Allow mouse and keyboard selection.
+
+Integrate with:
+
+- Dashboard
+- Monthly grid
+- Archives
+- Daily preparation
+- Internal transfer
+- Identity editing
+- Individual reports
+- External transfer
+- External archive
+- Dismissal
+- Dismissal archive
+- Personnel exports
+- User management
+- Audit log
+
+Search must respect the target module's population.
+
+For example:
+
+- Dismissal searches active personnel.
+- Dismissal archive searches dismissed personnel.
+- External archive searches externally transferred personnel.
+- Historical archive search resolves archived identities.
+- Audit search includes historical targets.
+
+Completion condition:
+
+Search behavior is consistent and performant across the entire application.
+
+---
+
+PHASE 18 — DAILY PREPARATION WORKFLOW
+
+Purpose:
+
+Implement the operational attendance-changing screen.
+
+User workflow:
+
+1. Open Administration.
+2. Open Force Accountability.
+3. Choose Daily Preparation.
+4. View the active personnel list.
+5. Select All Sites or a specific site.
+6. Search for a person if required.
+7. Select one person or multiple people.
+8. Select the required attendance status.
+9. Press Confirm.
+10. Review a confirmation dialog containing:
+    - Each person's name.
+    - Personnel number.
+    - Current attendance status.
+    - New attendance status.
+    - Total number selected.
+11. Confirm execution.
+12. Review the success result.
+
+Cancellation:
+
+If the user presses Cancel during the editing workflow, show the requested cancellation confirmation.
+
+Backend:
+
+1. Resolve the selected business date.
+2. Reject modifications to sealed months.
+3. Validate all selected person IDs.
+4. Check eligibility on the date.
+5. Resolve correct effective sites.
+6. Check existing daily attendance.
+7. Compare old and new status IDs.
+8. Ignore no-op changes without misleading revision records.
+9. Begin a database transaction.
+10. Insert or update daily attendance.
+11. Record status revisions.
+12. Append audit events.
+13. Commit.
+14. Invalidate affected dashboard and monthly providers.
+15. Recalculate completion percentages.
+
+Bulk changes must be atomic for the accepted selection.
+
+Backdated changes may apply only to the active non-archived month.
+
+Completion condition:
+
+Preparation updates all related screens without duplicate daily records.
+
+---
+
+PHASE 19 — ATTENDANCE COMPLETION INDICATORS
+
+Purpose:
+
+Implement accurate daily completion indicators.
+
+Display:
+
+- Overall force completion.
+- Selected site completion.
+- Prepared count.
+- Unprepared count.
+- Completion percentage.
+
+Formula:
+
+"prepared = eligible_force - unprepared"
+
+"completion_percentage = prepared / eligible_force * 100"
+
+Handle zero eligible personnel without division errors.
+
+The indicator must update after:
+
+- Preparation.
+- Corrected preparation.
+- Internal transfer.
+- External transfer.
+- Dismissal.
+- Site changes affecting eligible personnel.
+
+Completion condition:
+
+The indicator never confuses absence with missing preparation.
+
+---
+
+PHASE 20 — MAIN DASHBOARD
+
+Purpose:
+
+Implement the main interactive force statistics screen.
+
+User workflow:
+
+1. Open the Dashboard.
+2. See Total Force.
+3. See Present.
+4. See other statuses in their defined order.
+5. See Unprepared.
+6. Use "الكل" for all sites.
+7. Select an individual site.
+8. Observe updated counters.
+9. Search by name or personnel number.
+10. Select a suggestion.
+11. Open or display the person's details and current site.
+
+Backend:
+
+1. Query distinct eligible persons.
+2. Apply selected effective site.
+3. Group attendance status IDs.
+4. Calculate unprepared separately.
+5. Order statuses by "display_order".
+6. Return a reactive dashboard model.
+7. Requery after successful business mutations.
+
+Never calculate the total by summing transfer-marker rows.
+
+Completion condition:
+
+Every dashboard number agrees with the corresponding authoritative daily attendance calculations.
+
+---
+
+PHASE 21 — MONTHLY ACCOUNTABILITY GRID
+
+Purpose:
+
+Implement the complete monthly force accountability screen.
+
+Required fixed columns:
+
+- الرقم
+- الرقم (ع)
+- الاسم
+- الموقع
+
+The four columns must remain fixed horizontally on the right side of the RTL grid.
+
+The header must remain fixed vertically.
+
+Day columns must scroll horizontally.
+
+User workflow:
+
+1. Open Monthly Accountability.
+2. View personnel and month-day columns.
+3. Read each day number and Arabic weekday abbreviation.
+4. Use site filters.
+5. Use intelligent search.
+6. Scroll vertically through personnel.
+7. Scroll horizontally through the month.
+8. Observe color-coded attendance cells.
+9. Observe transfer markers.
+10. Observe dismissal markers.
+11. Double-click a person for details.
+12. Use Export.
+
+Technical implementation:
+
+1. Generate month-day descriptors centrally.
+2. Resolve site participation intervals.
+3. Resolve each person's daily attendance.
+4. Resolve transfer events.
+5. Resolve dismissals.
+6. Build a sparse monthly cell model.
+7. Render only the visible grid region.
+8. Virtualize vertically and horizontally.
+9. Cache bounded visible row data.
+10. Avoid rebuilding the entire grid on each hover or selection.
+11. Use dedicated models for attendance, transfer, dismissal, and empty cells.
+12. Implement full status tooltips.
+13. Preserve scrolling during detail dialogs.
+14. Maintain RTL frozen-column correctness.
+15. Use genuine data instead of UI placeholders.
+
+Performance:
+
+Test with 1,000, 5,000, 10,000, and 20,000 individuals.
+
+Measure frame time and memory usage.
+
+Completion condition:
+
+The grid displays accurate attendance and historical movements without freezing under tested workloads.
+
+---
+
+PHASE 22 — INTERNAL TRANSFER SCREEN AND TRANSACTION ENGINE
+
+Purpose:
+
+Implement complete internal site transfers.
+
+Screen structure:
+
+Right:
+
+"الموقع الحالي"
+
+Center:
+
+Arrow and "ينقل إلى"
+
+Left:
+
+"الموقع المنقول له"
+
+Source-side interaction:
+
+1. Choose source site.
+2. Load currently assigned personnel.
+3. Search by name or personnel number.
+4. Select one or several individuals.
+
+Destination-side interaction:
+
+1. Open destination list.
+2. Exclude source site.
+3. Select destination.
+
+Confirmation:
+
+Display:
+
+- Selected names.
+- Personnel numbers.
+- Source site.
+- Destination site.
+- Effective transfer date.
+
+Backend algorithm:
+
+1. Validate role.
+2. Validate selected persons.
+3. Validate source assignment on the effective date.
+4. Validate destination.
+5. Prevent source = destination.
+6. Reject invalid or conflicting historical movement intervals.
+7. Begin transaction.
+8. Close previous assignment intervals.
+9. Create new destination assignment intervals.
+10. Append internal transfer event records.
+11. Preserve original attendance history.
+12. Reconcile official attendance recorded on the transfer date with the destination-site ownership rule.
+13. Update current site relationships.
+14. Append audit records.
+15. Commit.
+16. Refresh all affected screens.
+
+Monthly representation:
+
+- Previous site: "تم نقله للموقع (...)"
+- New site: "تم نقله من (...)"
+- Previous site stops future preparation.
+- New site begins on transfer day.
+- Earlier destination days remain empty.
+- Old source days remain historically accurate.
+
+Completion condition:
+
+Several transfers in one month produce a correct and nonduplicated monthly history.
+
+---
+
+PHASE 23 — PERSONNEL IDENTITY CORRECTION
+
+Purpose:
+
+Implement safe changes to names and personnel numbers.
+
+User workflow:
+
+1. Open Modify Force.
+2. See all active persons.
+3. Filter by site.
+4. Search by name or personnel number.
+5. Select a person.
+6. Edit name and/or personnel number.
+7. Press Confirm.
+8. Review changes.
+9. Confirm execution.
+
+Backend:
+
+1. Validate name.
+2. Validate personnel number.
+3. Normalize the new personnel number.
+4. Check global uniqueness.
+5. Load the current identity.
+6. Create identity history.
+7. Update authoritative person record.
+8. Preserve immutable person ID.
+9. Update active projections.
+10. Preserve sealed archive identity snapshots.
+11. Audit changes.
+12. Commit.
+
+Do not permit editing any other personnel attributes through this particular screen.
+
+Dynamic attributes remain managed through their dedicated functionality.
+
+Completion condition:
+
+Historical reports still refer to the same person after identity correction.
+
+---
+
+PHASE 24 — EXTERNAL TRANSFER
+
+Purpose:
+
+Implement removal from active force while preserving history.
+
+User workflow:
+
+1. Open External Transfer.
+2. See full active force list.
+3. Filter by site.
+4. Search for person.
+5. Select person.
+6. Press Confirm.
+7. Display required external destination input.
+8. Keep final Confirm disabled while destination is empty.
+9. Enter destination.
+10. Confirm the operation.
+
+Backend:
+
+1. Validate person eligibility.
+2. Validate external destination.
+3. Validate effective date.
+4. Reject conflicting dismissal/departure states.
+5. Begin transaction.
+6. Record external transfer.
+7. Close active site assignment.
+8. Update lifecycle status.
+9. Preserve historical daily attendance.
+10. Stop future preparation.
+11. Update active force queries.
+12. Disable linked user accounts where applicable, except the foundational administrator.
+13. Append audit event.
+14. Commit.
+
+Archive:
+
+Create an archive screen with:
+
+- Intelligent search.
+- Full name.
+- Personnel number.
+- Previous site.
+- External destination.
+- Effective date.
+- Previous attendance.
+- Previous movements.
+
+Completion condition:
+
+The person no longer counts toward active strength but remains fully available historically.
+
+---
+
+PHASE 25 — DISMISSAL
+
+Purpose:
+
+Implement dismissal with strong confirmation and historical preservation.
+
+User workflow:
+
+1. Open Dismissal.
+2. Search by name or personnel number.
+3. Choose individual.
+4. Open the dismissal dialog.
+5. Enter required dismissal reason.
+6. Press the preliminary Confirm.
+7. Display the final warning dialog.
+8. Start a visible 5-second countdown.
+9. Disable final Confirm until countdown finishes.
+10. Enable final Confirm.
+11. Require final confirmation.
+12. Execute dismissal.
+
+Backend:
+
+1. Validate current person lifecycle.
+2. Validate dismissal reason.
+3. Validate effective date.
+4. Prevent duplicate dismissal.
+5. Begin transaction.
+6. Insert dismissal event.
+7. Close current site assignment.
+8. Mark person as dismissed.
+9. Preserve historical records.
+10. Generate monthly dismissal marker.
+11. Stop subsequent attendance eligibility.
+12. Update active totals.
+13. Disable linked accounts where appropriate, except the foundational administrator.
+14. Audit operation.
+15. Commit.
+
+Dismissal archive:
+
+Show:
+
+- Name
+- Personnel number
+- Arabic day name
+- Dismissal date
+- Month
+- Reason
+- Last site
+
+Add autocomplete search.
+
+Completion condition:
+
+Dismissal removes the individual from the active force without deleting historical service records.
+
+---
+
+PHASE 26 — MONTHLY ARCHIVE ENGINE
+
+Purpose:
+
+Implement the official read-only monthly archive.
+
+Archive creation algorithm:
+
+1. Determine the latest completed month.
+2. Query unarchived completed months in chronological order.
+3. For each month, start a controlled archival transaction.
+4. Resolve every person who participated during that month.
+5. Capture historical identity values.
+6. Capture historical site assignments.
+7. Capture daily attendance.
+8. Capture transfer markers.
+9. Capture dismissal markers.
+10. Capture relevant status metadata.
+11. Create immutable monthly snapshot records.
+12. Calculate archive integrity metadata.
+13. Seal the archive.
+14. Commit.
+15. Continue to the next missing completed month.
+
+Important:
+
+The archive must represent the actual completed month, not current personnel assignments copied backward.
+
+A person who left halfway through the month must remain visible for their earlier valid participation.
+
+Archived month editing must be rejected at the application-service and persistence layers.
+
+Archive UI:
+
+1. Choose archived month.
+2. Choose site.
+3. Search by name or personnel number.
+4. View historic data.
+5. Scroll the monthly table.
+6. Export to Excel.
+7. Print the archived report.
+
+Completion condition:
+
+Later changes to names, sites, statuses, or personnel lifecycle do not alter sealed archive values.
+
+---
+
+PHASE 27 — INDIVIDUAL REPORTING ENGINE
+
+Purpose:
+
+Generate a complete report for a selected person.
+
+User workflow:
+
+1. Open Reports.
+2. See an uncluttered search screen.
+3. Enter name or personnel number.
+4. Choose a suggestion.
+5. Press "تقرير".
+6. View full report.
+7. Print or export.
+
+Report contents:
+
+- Person identity.
+- Personnel number.
+- Current or final site.
+- Attendance records.
+- Date of each attendance record.
+- Arabic weekday.
+- Monthly attendance totals.
+- Total days in each status.
+- Historical sites.
+- Internal transfer history.
+- External transfer details if applicable.
+- Dismissal details if applicable.
+
+Backend:
+
+1. Resolve immutable person ID.
+2. Load historical assignment intervals.
+3. Load daily attendance.
+4. Load status definitions or historical snapshots.
+5. Load movement events.
+6. Aggregate by month and status.
+7. Produce a structured report model.
+8. Render Arabic report.
+9. Export or print.
+
+Completion condition:
+
+Individual totals match underlying attendance records and monthly historical data.
+
+---
+
+PHASE 28 — PERSONNEL LIST EXPORT
+
+Purpose:
+
+Implement the Personnel Lists Export screen.
+
+Display:
+
+- Sequential number.
+- Personnel number.
+- Full name.
+- Site.
+- Dynamic attributes.
+
+Provide:
+
+- Site filter.
+- Intelligent search.
+- Export button.
+- Export scope dropdown.
+
+Scope 1:
+
+"جميع الكشوفات"
+
+Generate:
+
+- One complete combined list.
+- One separate file for every site.
+
+Scope 2:
+
+"الكشف الكلي"
+
+Generate:
+
+- The complete combined list only.
+
+Scope 3:
+
+"كشف الموقع المحدد"
+
+Generate:
+
+- One file for the selected site.
+
+User must choose the output folder.
+
+Implementation:
+
+1. Resolve selected export scope.
+2. Display an export scope summary.
+3. Fetch correct records.
+4. Include enabled columns.
+5. Preserve personnel numbers as text.
+6. Generate formatted ".xlsx" workbooks.
+7. Validate output.
+8. Use safe filenames.
+9. Avoid overwriting without explicit handling.
+10. Audit export.
+
+Filtering affects the screen preview; the export dialog must explicitly show whether it is exporting all eligible records for the selected scope, rather than silently reducing an all-records export because of a search query.
+
+Completion condition:
+
+Every named export option produces exactly the required files.
+
+---
+
+PHASE 29 — MONTHLY EXCEL EXPORT
+
+Purpose:
+
+Implement monthly accountability export.
+
+User workflow:
+
+1. Open Monthly Accountability.
+2. Press Export.
+3. Choose:
+   - All sites.
+   - One selected site.
+4. Choose destination folder.
+5. Confirm.
+6. Review export completion.
+
+All-sites export:
+
+Generate one complete combined workbook plus one separate workbook for each site.
+
+Selected-site export:
+
+Generate the selected site's monthly workbook only.
+
+Workbook requirements:
+
+1. Arabic headings.
+2. Correct RTL worksheet display.
+3. Four fixed identification columns.
+4. Freeze panes for the first four columns.
+5. Correct day numbers.
+6. Correct Arabic weekday abbreviations.
+7. Status short codes.
+8. Status colors.
+9. Transfer markers.
+10. Dismissal markers.
+11. Correct column widths.
+12. Correct row heights.
+13. Readable borders.
+14. Appropriate print orientation.
+15. Repeated headers for multipage printing where supported.
+16. Preservation of all source records.
+17. Correct personnel-number text formatting.
+
+Use a verified Excel library supporting the required workbook features.
+
+Do not choose a library solely because it can write simple spreadsheet values.
+
+Completion condition:
+
+Generated workbooks are tested for styling, frozen panes, RTL behavior, and correct historical data.
+
+---
+
+PHASE 30 — ARCHIVE EXPORT AND PRINTING
+
+Purpose:
+
+Implement permanent access to archived monthly reports.
+
+User workflow:
+
+1. Open Archives.
+2. Choose month.
+3. Select site or all sites.
+4. Search if needed.
+5. Select Export or Print.
+
+Backend:
+
+1. Load only sealed archive records.
+2. Do not recompute historical values from current personnel data.
+3. Generate output from archived snapshots.
+4. Preserve historical labels and colors.
+5. Preserve transfer/dismissal markers.
+6. Export Excel.
+7. Generate a print-ready representation.
+8. Use local Windows printing facilities.
+9. Record the export/print operation appropriately.
+10. Do not modify archive records.
+
+Completion condition:
+
+Printing or exporting a previous month reproduces the same official archived values consistently.
+
+---
+
+PHASE 31 — USER MANAGEMENT SCREEN
+
+Purpose:
+
+Implement account creation, password editing, deletion, and role-specific management.
+
+Visibility:
+
+- General Admin: full user management.
+- Ordinary Admin: supervisor management only.
+- Supervisor: no user management screen.
+
+Add User
+
+1. Press Add.
+2. Enter username.
+3. Enter full name using personnel autocomplete.
+4. Select an existing person.
+5. Auto-fill personnel number.
+6. Choose permitted role.
+7. Enter password.
+8. Validate password.
+9. Confirm creation.
+
+Password rule for newly created accounts:
+
+Exactly:
+
+- 3 English letters.
+- 3 digits.
+- 1 special character.
+
+Total length: 7 characters.
+
+The characters may appear in any order.
+
+Reject whitespace and any additional characters.
+
+This rule does not modify the predefined general administrator's initial password.
+
+Account List
+
+Display:
+
+- Sequential number.
+- Personnel number.
+- Username.
+- Full name.
+- Role.
+- Created by.
+
+Provide search and autocomplete.
+
+Edit
+
+Only permit modifying the account password.
+
+Do not allow changing other account fields through Edit.
+
+Delete
+
+1. Select Delete.
+2. Show warning.
+3. Confirm.
+4. Deactivate the account.
+5. Invalidate sessions.
+6. Prevent future login.
+7. Preserve historical audit references.
+
+Apply all role constraints before mutation.
+
+Completion condition:
+
+Ordinary administrators cannot create or manage other ordinary administrators, and supervisors cannot access user management.
+
+---
+
+PHASE 32 — AUDIT LOG SCREEN
+
+Purpose:
+
+Expose the historical operation log.
+
+Display:
+
+1. Operation name.
+2. Target.
+3. Executing user.
+4. Execution date and time.
+
+Filters:
+
+- Operation type.
+- Date.
+- Executing user.
+- Target person search.
+- Personnel number search.
+
+Implementation:
+
+1. Query audit records with pagination.
+2. Apply combined filters.
+3. Resolve current and historical target identity.
+4. Preserve original execution data.
+5. Display details.
+6. Export filtered results to Excel.
+7. Prevent all normal editing and deletion of audit events.
+
+Completion condition:
+
+Audit records remain readable and filterable even when personnel identities or user accounts have subsequently changed.
+
+---
+
+PHASE 33 — MANUAL ENCRYPTED BACKUP
+
+Purpose:
+
+Implement safe manual backups.
+
+Default destination:
+
+A project-specific directory on drive "E:".
+
+User workflow:
+
+1. Open Settings.
+2. Press Backup.
+3. Check whether "E:" exists.
+4. Check destination write permission.
+5. If unavailable, show warning.
+6. Allow approved alternative location.
+7. Confirm backup.
+8. Display progress.
+9. Display completion only after verification.
+
+Backend:
+
+1. Acquire a backup-operation lock.
+2. Open a consistent snapshot of the active database.
+3. Use SQLite Online Backup or another verified consistent backup mechanism.
+4. Wrap backup content in authenticated encryption where appropriate.
+5. Include format and schema version metadata.
+6. Include checksum.
+7. Include authenticated integrity metadata.
+8. Write to a temporary destination.
+9. Flush and verify.
+10. Atomically finalize where supported.
+11. Update backup history.
+12. Audit the operation.
+13. Release lock.
+
+Completion condition:
+
+A backup created during normal application activity restores consistently.
+
+---
+
+PHASE 34 — ENCRYPTED BACKUP RESTORATION
+
+Purpose:
+
+Implement reliable restoration without risking the current database.
+
+User workflow:
+
+1. Open Settings.
+2. Press Restore Backup.
+3. Select backup file.
+4. Application validates the file.
+5. Application displays backup metadata.
+6. User provides offline recovery material if required.
+7. Application verifies integrity.
+8. User confirms replacement.
+9. Application performs restoration.
+10. Application reopens with restored data.
+
+Backend:
+
+1. Validate file structure.
+2. Validate integrity checksum.
+3. Verify authenticated encryption.
+4. Validate recovery key.
+5. Check schema compatibility.
+6. Restore into a temporary isolated database.
+7. Run "PRAGMA integrity_check".
+8. Run foreign-key validation.
+9. Verify required foundational tables.
+10. Preserve a rollback path during the replacement transaction.
+11. Close active database connections.
+12. Replace the active database safely.
+13. Reinitialize repositories and application state.
+14. Mark success only after the restored database opens correctly.
+15. Clean up temporary restoration files.
+
+Completion condition:
+
+An invalid or corrupted backup cannot destroy the currently working database.
+
+---
+
+PHASE 35 — AUTOMATIC DAILY BACKUP SCHEDULER
+
+Purpose:
+
+Implement automatic backups every day.
+
+Default:
+
+4:00 PM local Windows time.
+
+User workflow:
+
+1. Open Settings.
+2. See automatic backup schedule.
+3. Change time if desired.
+4. Save.
+5. Application registers the new schedule.
+6. Display scheduling status.
+
+When application is open:
+
+1. Detect schedule time.
+2. Start backup outside the UI isolate.
+3. Prevent overlapping backups.
+4. Update backup history.
+5. Keep the UI responsive.
+
+When application is closed:
+
+1. Use Windows Task Scheduler where permitted.
+2. Run a noninteractive backup command or dedicated background executable.
+3. Access the protected database key under an appropriate Windows user context.
+4. Do not launch an interactive Flutter window.
+5. Do not store plaintext application login credentials in the scheduled task.
+6. Verify actual task registration.
+7. Report scheduling limitations.
+
+When the computer was off at the scheduled time:
+
+1. Detect missing scheduled backup.
+2. Perform a catch-up backup at next eligible application launch.
+3. Avoid duplicate backups for the same scheduled occurrence.
+4. Record failures and recoveries.
+
+Completion condition:
+
+Scheduling works under documented Windows conditions, and missed backups are handled explicitly.
+
+---
+
+PHASE 36 — SETTINGS AND APPLICATION DATA RESET
+
+Purpose:
+
+Complete all remaining settings.
+
+Display:
+
+- Application name.
+- Current username.
+- Current role.
+- Manual backup.
+- Restore backup.
+- Scheduled backup.
+- Backup history.
+- Delete all application data.
+- Application version.
+- Logout.
+
+Complete Data Deletion
+
+User workflow:
+
+1. Press Delete All Data.
+2. Show a strong Arabic warning.
+3. State the intended deletion scope.
+4. Request current account password.
+5. Validate password.
+6. Start mandatory countdown.
+7. Enable final Confirm after countdown.
+8. Request final confirmation.
+9. Execute the reset.
+
+Backend:
+
+1. Block new operations.
+2. Stop running imports and exports safely.
+3. Stop active backup jobs.
+4. Unregister managed scheduled backup tasks.
+5. Identify the active encrypted database.
+6. Identify all registered managed backup locations.
+7. Validate deletion permissions.
+8. Prevent misleading partial-success reports.
+9. Delete managed data and managed backup generations.
+10. Remove managed temporary files.
+11. Reinitialize the application into a clean state.
+12. Recreate only the foundational initialization data required for a fresh launch.
+
+Important:
+
+Do not silently retain an undisclosed backup.
+
+Do not claim that backups on unavailable external drives have been deleted.
+
+If a managed backup location is inaccessible, present the incomplete deletion condition explicitly.
+
+Completion condition:
+
+Reset behavior is deliberate, authenticated, and accurately reported.
+
+---
+
+PHASE 37 — ERROR HANDLING AND CONCURRENCY HARDENING
+
+Purpose:
+
+Protect the application from common operational failures.
+
+Implementation:
+
+1. Centralize exception mapping.
+2. Add Arabic user-facing messages.
+3. Separate expected validation failures from system faults.
+4. Add safe database retry logic for transient lock contention.
+5. Avoid retrying non-idempotent mutations blindly.
+6. Implement operation IDs for safe deduplication.
+7. Prevent concurrent conflicting personnel modifications.
+8. Prevent simultaneous archive operations.
+9. Prevent overlapping backups and restores.
+10. Stop new writes during restoration.
+11. Handle disk-full errors.
+12. Handle read-only folders.
+13. Handle removed drives.
+14. Handle interrupted imports.
+15. Handle interrupted exports.
+16. Handle corrupted files.
+17. Handle process termination during transactional writes.
+18. Implement safe cancellation points.
+19. Preserve application consistency after exceptions.
+
+Completion condition:
+
+Recoverable errors never leave business data partially committed.
+
+---
+
+PHASE 38 — PERFORMANCE OPTIMIZATION
+
+Purpose:
+
+Make the application responsive with large personnel datasets.
+
+Required test sizes:
+
+- 1,000 individuals.
+- 5,000 individuals.
+- 10,000 individuals.
+- 20,000 individuals.
+
+Optimization:
+
+1. Add database indexes based on query plans.
+2. Avoid full-table scanning for routine autocomplete.
+3. Use paginated repository methods.
+4. Use lazy month-cell calculation.
+5. Use two-dimensional grid virtualization.
+6. Use bounded caches.
+7. Use background workers/isolate execution for heavy parsing.
+8. Use background Excel generation.
+9. Use responsive progress reporting.
+10. Cancel stale searches.
+11. Avoid duplicate service calls.
+12. Avoid unnecessary widget rebuilds.
+13. Benchmark aggregate SQL queries.
+14. Benchmark transfer recalculation.
+15. Benchmark archive creation.
+16. Measure memory.
+17. Measure frame timings.
+18. Document real hardware results.
+
+Completion condition:
+
+Performance is measured and optimized, not assumed.
+
+---
+
+PHASE 39 — SECURITY VERIFICATION
+
+Purpose:
+
+Verify application security without introducing online dependencies.
+
+Tests:
+
+1. Confirm database encryption.
+2. Confirm encrypted backup format.
+3. Confirm protected encryption keys.
+4. Confirm password hashing.
+5. Confirm role authorization.
+6. Attempt unauthorized account creation.
+7. Attempt privilege escalation.
+8. Attempt accessing hidden screens.
+9. Attempt direct application-service calls with unauthorized sessions.
+10. Attempt modifying sealed archives.
+11. Attempt audit mutation.
+12. Test corrupted backup authentication.
+13. Test session inactivity lock.
+14. Test deleted account login rejection.
+15. Inspect logs for secrets.
+16. Inspect release assets for unintended plaintext databases.
+17. Scan for unapproved network calls.
+18. Verify the program works offline.
+
+Document the residual risks of fixed default credentials and of local administrator access.
+
+Completion condition:
+
+No identified critical security defect remains unresolved.
+
+---
+
+PHASE 40 — AUTOMATED FUNCTIONAL AND INTEGRATION TESTING
+
+Purpose:
+
+Test the complete system as an integrated application.
+
+Create tests covering:
+
+- General administrator login.
+- Ordinary administrator login.
+- Supervisor login.
+- Role restrictions.
+- User creation and deletion.
+- Site creation and deletion.
+- Custom status creation.
+- Automatic import.
+- Smart import.
+- Dynamic column creation.
+- Duplicate rejection.
+- Daily individual preparation.
+- Daily bulk preparation.
+- Backdated active-month preparation.
+- Dashboard count reconciliation.
+- Monthly frozen columns.
+- RTL grid navigation.
+- Internal transfer.
+- Repeated internal transfers.
+- External transfer.
+- Dismissal.
+- Historical report generation.
+- End-of-month archiving.
+- Archive immutability.
+- Personnel list export.
+- Monthly Excel export.
+- Archive printing.
+- Manual backup.
+- Scheduled backup.
+- Backup restoration.
+- Cross-device recovery.
+- Full application reset.
+- Offline usage.
+- Application restart.
+- Schema upgrades.
+
+For each test, define:
+
+1. Initial database state.
+2. User role.
+3. User action.
+4. Expected database mutation.
+5. Expected UI update.
+6. Expected audit event.
+7. Expected historical behavior.
+8. Expected result after restarting the application.
+
+Completion condition:
+
+All mandatory functional and integration tests pass.
+
+---
+
+PHASE 41 — GITHUB ACTIONS CONTINUOUS INTEGRATION
+
+Purpose:
+
+Automate project validation.
+
+Implement GitHub Actions workflows for:
+
+1. Checkout.
+2. Flutter installation.
+3. Dependency retrieval.
+4. Drift code generation.
+5. Dart formatting validation.
+6. Static analysis.
+7. Unit tests.
+8. Widget tests.
+9. Applicable Windows integration tests.
+10. Native dependency validation.
+11. Windows release build.
+12. Packaging.
+13. Artifact checksums.
+14. Artifact uploads.
+
+Require protected release credentials where genuinely necessary.
+
+Do not store plaintext secrets in workflow files.
+
+Use synthetic test data.
+
+Do not publish source or release artifacts publicly by default.
+
+The Windows build must not be marked successful when required encryption libraries are missing.
+
+Completion condition:
+
+A clean Windows CI runner can validate and build the project reproducibly.
+
+---
+
+PHASE 42 — WINDOWS INSTALLER, PORTABLE PACKAGE, AND FINAL ACCEPTANCE
+
+Purpose:
+
+Deliver fully functional Windows distributions.
+
+Installer
+
+Produce a Windows ".exe" installer.
+
+Include:
+
+- Flutter application executable.
+- Flutter DLLs.
+- Required runtime files.
+- Native encryption libraries.
+- Local fonts.
+- All bundled assets.
+- Correct application metadata.
+- Appropriate shortcut.
+- Controlled uninstall behavior.
+
+Portable
+
+Produce a ZIP containing:
+
+- Application executable.
+- Required DLLs.
+- Flutter data directory.
+- Encryption runtime.
+- Local assets.
+- Required VC++ runtime components when legally and technically appropriate.
+- Correct writable storage behavior.
+
+Do not distribute only the Flutter ".exe" without its runtime dependencies.
+
+Clean Windows Verification
+
+1. Use a clean Windows environment.
+2. Install the Setup package.
+3. Run first-launch initialization.
+4. Verify default administrator login.
+5. Import test personnel.
+6. Prepare attendance.
+7. Transfer an individual.
+8. Dismiss an individual.
+9. Export Excel.
+10. Create a backup.
+11. Restore a backup.
+12. Verify all operations offline.
+13. Close and restart.
+14. Verify persistence.
+15. Repeat essential workflows with the Portable package.
+
+Final Documentation
+
+Deliver:
+
+- Complete source repository.
+- README.
+- Arabic user guide.
+- Arabic administration guide.
+- Architecture documentation.
+- Database schema reference.
+- Backup/recovery documentation.
+- Security documentation.
+- GitHub Actions instructions.
+- Windows build instructions.
+- Installer instructions.
+- Portable instructions.
+- Test results.
+- Requirement traceability report.
+- Release checksums.
+- Changelog.
+
+Final Acceptance
+
+The application is complete only when:
+
+- All original requirements are implemented.
+- All approved enhancements are implemented.
+- Every mandatory screen works.
+- Data remains historically accurate.
+- Permission restrictions work.
+- Database encryption works.
+- Backup recovery works.
+- Excel operations work.
+- Offline runtime works.
+- Installer works.
+- Portable version works.
+- Tests pass.
+- No critical defects remain.
+- Documentation is complete.
+
+---
+
+PART VIII — REQUIRED REAL-WORLD ACCEPTANCE SCENARIOS
+
+Scenario A — Initial Setup
+
+1. Start with a clean Windows installation.
+2. Run the application without internet.
+3. Log in using the predefined general administrator.
+4. Open Sites.
+5. Create three sites.
+6. Verify "غير محدد" exists and cannot be removed.
+7. Open Statuses.
+8. Verify four default statuses.
+9. Add a custom status.
+10. Confirm the status appears in preparation and dashboard configuration.
+
+Expected outcome:
+
+The application is initialized locally and requires no remote service.
+
+---
+
+Scenario B — Import Personnel
+
+1. Import a workbook containing 500 personnel.
+2. Include several missing sites.
+3. Include duplicate personnel numbers.
+4. Include Arabic and Western numerals.
+5. Include names with extra spaces.
+6. Confirm import.
+7. Verify valid personnel are inserted.
+8. Verify missing sites are created.
+9. Verify duplicate rows are rejected.
+10. Verify the rejection report explains every conflict.
+11. Import the same workbook again.
+12. Verify no duplicate persons are created.
+
+Expected outcome:
+
+The registry remains accurate and consistent.
+
+---
+
+Scenario C — Daily Attendance
+
+1. Select Site A.
+2. Prepare 50 persons as Present.
+3. Prepare 10 as Leave.
+4. Prepare 5 as Absent.
+5. Leave other people unprepared.
+6. Confirm.
+7. Inspect progress indicators.
+8. Inspect Dashboard.
+9. Inspect Monthly Accountability.
+10. Change one recorded status.
+11. Inspect the audit event.
+
+Expected outcome:
+
+Every count reconciles and the previous status is preserved in history.
+
+---
+
+Scenario D — Internal Transfer
+
+1. Select an active person from Site A.
+2. Transfer the person to Site B effective on day 13.
+3. Verify day 12 remains under Site A.
+4. Verify day 13 displays the outgoing marker in Site A.
+5. Verify day 13 displays the incoming marker in Site B.
+6. Verify attendance on day 13 belongs to Site B.
+7. Verify previous Site B days are empty.
+8. Verify future attendance continues under Site B.
+9. Verify global force count does not increase.
+10. Transfer the same person to Site C on day 20.
+11. Verify all three site periods remain historically accurate.
+
+Expected outcome:
+
+Repeated transfers never overwrite history or duplicate force totals.
+
+---
+
+Scenario E — Dismissal
+
+1. Select an active person.
+2. Enter dismissal reason.
+3. Start confirmation.
+4. Verify five-second countdown.
+5. Confirm dismissal.
+6. Verify the person disappears from active force totals.
+7. Verify the monthly dismissal marker.
+8. Verify earlier monthly attendance remains.
+9. Verify the person appears in the dismissal archive.
+10. Verify previous reports remain available.
+
+Expected outcome:
+
+The person is removed operationally but preserved historically.
+
+---
+
+Scenario F — Month Closure
+
+1. Prepare a month containing attendance and transfers.
+2. Simulate the transition to the following month.
+3. Trigger the archival service.
+4. Verify the previous month is sealed.
+5. Verify the new month begins without prepared attendance.
+6. Rename a person.
+7. Rename a site.
+8. Reopen the archived month.
+9. Verify the archive still displays the historical snapshot.
+10. Attempt an archived attendance edit.
+11. Verify rejection.
+
+Expected outcome:
+
+Archived months cannot be silently rewritten.
+
+---
+
+Scenario G — Backup Recovery
+
+1. Create an encrypted database containing personnel and attendance.
+2. Create a backup.
+3. Validate its metadata.
+4. Copy the encrypted backup to another Windows test machine.
+5. Install the application there.
+6. Supply valid offline recovery material.
+7. Restore the backup.
+8. Verify record counts and history.
+9. Attempt restoration with incorrect recovery material.
+10. Verify failure without damaging existing data.
+11. Corrupt a backup file.
+12. Verify integrity failure.
+
+Expected outcome:
+
+Backups are portable, authenticated, and recoverable under the defined recovery procedure.
+
+---
+
+PART IX — FINAL ENGINEERING EXECUTION INSTRUCTIONS
+
+Sequential Execution
+
+Execute phases 00 through 42 in order.
+
+Do not skip foundational phases.
+
+Do not repeatedly rebuild the project from zero.
+
+Each phase must extend the same maintained codebase.
+
+Per-Phase Reporting
+
+After every phase, report:
+
+1. Phase number.
+2. Requirements implemented.
+3. New files.
+4. Modified files.
+5. Database changes.
+6. UI changes.
+7. Business logic changes.
+8. Tests created.
+9. Tests executed.
+10. Actual test result.
+11. Actual build result.
+12. Existing-feature regression status.
+13. Known unresolved issues.
+14. Readiness for the next phase.
+
+Do not invent results.
+
+Code Quality Enforcement
+
+Continuously check for:
+
+- Duplicate code.
+- Dead code.
+- Unused imports.
+- Unused dependencies.
+- Inconsistent domain logic.
+- Improper UI/database coupling.
+- Unindexed high-cost queries.
+- Unsafe asynchronous state updates.
+- Missing transaction boundaries.
+- Missing audit records.
+- Incomplete authorization.
+- Hardcoded paths.
+- Unencrypted temporary data.
+- Unhandled error states.
+- Missing tests.
+- Incomplete packaging.
+
+Definition of Done
+
+A feature is done only when:
+
+1. The interface exists.
+2. User actions are functional.
+3. Input validation works.
+4. Business logic works.
+5. Database persistence works.
+6. Authorization works.
+7. Auditing works where applicable.
+8. Related screens update correctly.
+9. Historical behavior remains correct.
+10. Error handling works.
+11. Tests pass.
+12. Existing features remain functional.
+
+A successful compilation is not equivalent to a completed feature.
+
+A visually finished screen is not equivalent to working software.
+
+---
+
+FINAL MANDATORY DEVELOPMENT DIRECTIVE
+
+Develop a complete professional offline Flutter Windows Personnel Administration and Monthly Force Accountability application through all 43 engineering phases.
+
+Implement every screen, workflow, calculation, data relationship, archive rule, account permission, export operation, backup feature, and Windows deployment requirement specified above.
+
+Preserve the predefined general administrator username and password exactly as required, without forced initial password change.
+
+Use a private GitHub repository.
+
+Use encrypted local persistence.
+
+Maintain full historical integrity.
+
+Build complete Arabic RTL interfaces.
+
+Validate all required functionality through real tests.
+
+Generate production-ready Installer and Portable packages.
+
+Never remove original functionality, substitute mock behavior, silently ignore a requirement, or declare the project complete based only on a successful build.
+
+BEGIN PHASE 00, ESTABLISH THE REQUIREMENTS TRACEABILITY BASELINE, THEN PROCEED SEQUENTIALLY THROUGH PHASE 42 UNTIL ALL ACCEPTANCE CONDITIONS ARE SATISFIED.

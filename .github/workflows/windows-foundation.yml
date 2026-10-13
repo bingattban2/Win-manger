@@ -1,0 +1,85 @@
+name: Windows foundation build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Analyze, test and build (Windows)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter stable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Record toolchain
+        shell: pwsh
+        run: |
+          flutter --version
+          dart --version
+          flutter doctor -v
+          flutter config --enable-windows-desktop
+
+      - name: Generate official Windows runner without overwriting source
+        shell: pwsh
+        run: |
+          ./scripts/prepare_windows.ps1
+          git diff --exit-code -- lib test pubspec.yaml analysis_options.yaml
+          if ($LASTEXITCODE -ne 0) { throw 'Windows bootstrap modified hand-written source files' }
+
+      - name: Resolve dependencies
+        run: flutter pub get
+
+      - name: Format Dart sources for CI verification
+        run: dart format lib test
+
+      - name: Static analysis
+        run: flutter analyze
+
+      - name: Unit and widget tests
+        run: flutter test
+
+      - name: Validate requirements traceability
+        run: python scripts/validate_contract.py
+
+      - name: Build Windows release
+        run: flutter build windows --release
+
+      - name: Check release output and create portable-test artifact
+        shell: pwsh
+        run: |
+          $output = 'build\windows\x64\runner\Release'
+          if (!(Test-Path $output)) { throw "Build output not found: $output" }
+          $exe = Join-Path $output 'adwas_personnel.exe'
+          if (!(Test-Path $exe)) { throw 'Windows executable missing' }
+          New-Item -ItemType Directory -Force artifacts | Out-Null
+          $archive = 'artifacts\adwas-personnel-phase00-windows-x64.zip'
+          Compress-Archive -Path "$output\*" -DestinationPath $archive -Force
+          $hash = (Get-FileHash -Algorithm SHA256 $archive).Hash
+          "$hash  adwas-personnel-phase00-windows-x64.zip" | Out-File 'artifacts\SHA256SUMS.txt' -Encoding utf8
+          if ((Get-Item $archive).Length -lt 100000) { throw 'Suspiciously small build artifact' }
+
+      - name: Upload private build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adwas-personnel-phase00-windows-x64
+          path: |
+            artifacts/adwas-personnel-phase00-windows-x64.zip
+            artifacts/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
