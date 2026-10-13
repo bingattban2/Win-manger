@@ -1,62 +1,53 @@
-# نظام إدارة شؤون الأفراد — ADWAS Personnel
+# التمام اليومي — Windows (Flutter)
 
-**إصدار تأسيسي 0.0.1 | المرحلة 00 | غير صالح للاستخدام التشغيلي بعد**
+**Part II: Fixed Arabic terminology / Windows product title · Foundation version 0.0.2 · not production-ready**
 
-مشروع Flutter Desktop يستهدف Windows. المرجع الملزم هو `docs/SOURCE_SPECIFICATION.txt`، ويتضمن 43 مرحلة متسلسلة من 00 إلى 42. لا تستبدل شاشة البداية التأسيسية أيًا من الوظائف النهائية.
+This repository is a Flutter Windows project for a fully offline personnel administration and monthly force-accountability system. It is still a foundation smoke-test application: operational screens, encrypted SQLite, accounts, transfers, exports, and archival functions are implemented in their **later** phases, not impersonated by dummy buttons.
 
-## ماذا يتضمن هذا الإصدار؟
+## Included now
 
-- شيفرة Flutter/Dart قابلة للتجميع على Windows بواجهة عربية أولية صادقة حول حالة التنفيذ.
-- اختبارات أولية وملف GitHub Actions يبني إصدار Windows على مستودع خاص.
-- وثائق تتبع المتطلبات والمخطط والمجالات وحالات الاختبار.
-- قواعد تجاهل بيانات التشغيل الحساسة وقواعد البيانات المحلية والنسخ الاحتياطية.
+- Single-source fixed Arabic business terminology — `lib/core/config/business_terms.dart` and `docs/TERMINOLOGY.md`.
+- Product name **التمام اليومي** in Flutter app title, Windows window caption, Windows resources, and the packaged `.exe` filename.
+- Flutter foundation screen that truthfully displays the contract-approved Arabic terms as read-only labels.
+- Existing complete 43-phase traceability documentation and Phase-00 tests retained.
+- GitHub Actions native Windows build and portable smoke-test ZIP.
+- Explicit Flutter SDK **and Dart Pub** caches (reused between successful runs); `actions/checkout@v6`, `actions/upload-artifact@v6` for Node.js 24 compatibility.
+- Deterministic tests for business-term names and native Windows branding.
 
-**لا يتضمن بعد:** قاعدة بيانات مشفرة، تسجيل دخول فعلي، صلاحيات المستخدمين، التحضير، الاستيراد أو الأرشفة. لا يُستخدم لإدارة بيانات حقيقية.
+## Upload to your existing private GitHub repository (Win-manger)
 
-## رفع الملفات إلى GitHub واختبار البناء
+1. Extract this ZIP on your device.
+2. **Update the existing private repository:** upload/replace files in the repository root on branch `main`. Keep the hidden `.github/` directory, especially `.github/workflows/windows-foundation.yml`.
+3. Do **not** upload the ZIP as one single GitHub repository file: upload its extracted contents.
+4. Open **Actions → Windows foundation build** and watch the new run.
+5. Verify each step is green, then download the artifact **Altamam_AlYawmi_Part_II_Windows_x64**.
+6. Extract the artifact ZIP and then the enclosed `Altamam_AlYawmi_Part_II_Windows_x64.zip` file.
+7. On a Windows 10/11 x64 computer, run **التمام اليومي.exe** from the extracted directory, alongside the DLLs and `data/` folder. Confirm the title bar and on-screen title say «التمام اليومي» and the label `الرقم (ع)` appears correctly.
+8. Report CI outcome and any runtime fault before proceeding to the next development part.
 
-1. أنشئ مستودع GitHub **خاصًا (Private)** وليكن `adwas-personnel-windows`.
-2. فك ضغط الحزمة وارفع **محتويات المجلد من داخله إلى جذر المستودع**؛ يجب أن يظهر `pubspec.yaml` و`.github/workflows/windows-foundation.yml` في الجذر. استخدم `git` لتضمين المجلد المخفي `.github`؛ واجهة الرفع المباشر في GitHub قد لا تناسب رفع المجلدات كاملة.
-3. ضع الملفات في فرع `main` (أو انشئ PR يستهدفه).
-4. افتح **Actions → Windows foundation build → Run workflow**، أو انتظر تشغيله تلقائيًا بعد الرفع.
-5. يجب أن تنجح خطوات `dart format`, `flutter analyze`, `flutter test`, `python scripts/validate_contract.py`, `flutter build windows --release`.
-6. بعد نجاح المهمة، افتح **Artifacts** ونزّل حزمة `adwas-personnel-phase00-windows-x64`؛ تتضمن ZIP تجريبيًا لنظام Windows وملف SHA256.
-7. فك ضغط حزمة Windows بالكامل على Windows 10/11 x64 وشغّل `adwas_personnel.exe` من داخل المجلد. تحقق من ظهور شاشة عربية بعنوان **نظام إدارة شؤون الأفراد** وعبارة **المرحلة 00 — تأسيس المشروع**.
-8. **توقف عند هذه النقطة.** أرسل نتيجة Actions أو سجل الفشل قبل أن ننتقل إلى المرحلة 01.
+**Important:** The app does not create a desktop shortcut in this stage. The future Installer will create one named «التمام اليومي». At present, the executable itself is named «التمام اليومي.exe».
 
-> في هذا الإصدار التأسيسي، يقوم GitHub Actions بتوليد مجلد `windows/` من قالب Flutter داخل مجلد مؤقت ثم ينسخه للمشروع أثناء البناء؛ لا يوجد ملف Windows Runner جاهز ضمن حزمة المصدر بعد. سنثبت ملفات Runner في المستودع في المرحلة 01. المشروع ليس «نسخة مكتملة من البرنامج».
-
-## بناء محليًا (على Windows مع Flutter وVisual Studio C++)
+## Verify the code locally (Windows dev environment)
 
 ```powershell
 flutter doctor -v
 flutter config --enable-windows-desktop
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare_windows.ps1
+python -m unittest discover -s scripts -p "test_*.py" -v
 flutter pub get
 dart format lib test
 flutter analyze
 flutter test
-flutter build windows --release
+python scripts/validate_contract.py
+flutter build windows --release --no-pub
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_windows.ps1
 ```
 
-ملفات البناء: `build/windows/x64/runner/Release/` مع ملف exe وملفات DLL والمجلدات المصاحبة. **لا تنسخ exe وحده.**
+The **internal** Dart package name and generated Flutter target remain `adwas_personnel` for stability; only the user-facing product title and distributed EXE are Arabic. Future feature work must use the terms and IDs in `docs/TERMINOLOGY.md`.
 
-## البيانات الحساسة
+## Security & project status
 
-- لا ترفع قواعد بيانات إنتاجية أو كشوف أفراد أو مفاتيح أو نسخ احتياطية إلى GitHub.
-- بيانات دخول المسؤول الأساسي منصوص عليها في المرجع الأصلي، ولا تُنشر داخل الواجهة ولا داخل الكود التنفيذي في هذه المرحلة.
-- وجود مصدر في مستودع خاص لا يجعل تضمين الأسرار في الملفات التنفيذية آمنًا. تُعالج حماية بيانات الدخول في المرحلة 09، وقاعدة البيانات المشفرة في المرحلة 04.
-
-## التقدم
-
-| المجال | الحالة |
-|---|---|
-| وثائق وتتبع المرحلة 00 | معدّة؛ تنتظر مراجعة القبول |
-| مشروع Flutter تأسيسي | معدّ؛ بناء Windows لم يُختبر هنا |
-| GitHub CI | مُعد؛ يحتاج تشغيلًا على GitHub |
-| Windows Runner المثبّت في المصدر | المرحلة 01 |
-| قاعدة البيانات والتشفير | المراحل 04–06 |
-| الحسابات وتسجيل الدخول | المرحلة 09 |
-| الوظائف التشغيلية | المراحل المحددة في المرجع |
-
-اقرأ `docs/PHASE_REPORT_00.md` للحصول على تقرير التنفيذ ونقاط التحقق.
+- GitHub must remain **Private**; do not upload personnel spreadsheets, `.db` files, backups, encryption keys, or customer data.
+- The foundational administrator's password must never appear in code, build logs, or the UI as plaintext. Its eventual provisioning/authentication is assigned to phase 09; it is **not** enabled in this package.
+- This app is not yet fit for operational personnel records. Database encryption belongs to phase 04.
+- Refer to `docs/PART_II_IMPLEMENTATION_REPORT.md`, `docs/PHASE_REPORT_00.md`, and the preserved requirements traceability for delivery status.

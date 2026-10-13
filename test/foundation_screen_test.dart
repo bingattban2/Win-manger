@@ -1,5 +1,6 @@
 import 'package:adwas_personnel/app/personnel_app.dart';
 import 'package:adwas_personnel/core/config/project_info.dart';
+import 'package:adwas_personnel/core/config/business_terms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -15,6 +16,9 @@ void main() {
     await tester.pumpWidget(const PersonnelApp());
     expect(find.text(ProjectInfo.nameArabic), findsOneWidget);
     expect(find.text('المرحلة 00 — تأسيس المشروع'), findsOneWidget);
+    for (final term in BusinessTerm.values) {
+      expect(find.text(term.arabic), findsOneWidget);
+    }
     expect(find.byType(MaterialApp), findsOneWidget);
     expect(find.byType(TextField), findsNothing);
   });

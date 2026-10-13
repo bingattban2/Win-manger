@@ -1,4 +1,5 @@
 import 'package:adwas_personnel/core/config/project_info.dart';
+import 'package:adwas_personnel/core/config/business_terms.dart';
 import 'package:flutter/material.dart';
 
 /// Honest, read-only bootstrap screen; operational modules are NOT mocked.
@@ -91,11 +92,25 @@ class FoundationScreen extends StatelessWidget {
                             const SizedBox(height: 8),
                             const Text(
                               'هذه نسخة أولية لاختبار بناء تطبيق Windows. '
-                              'تم إعداد هيكل Flutter وسجل المتطلبات، '
+                              'تم إعداد هيكل Flutter وتوحيد المصطلحات العربية، '
                               'ولم تُفعّل الوظائف التشغيلية بعد.',
                             ),
                           ],
                         ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'المصطلحات العربية المعتمدة',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 7,
+                        runSpacing: 7,
+                        children: BusinessTerm.values
+                            .map((term) => _ReadOnlyTerm(label: term.arabic))
+                            .toList(),
                       ),
                       const SizedBox(height: 20),
                       Text(
@@ -154,6 +169,26 @@ class _InfoLine extends StatelessWidget {
           Expanded(child: Text(label)),
         ],
       ),
+    );
+  }
+}
+
+/// Display-only, deliberately not a clickable workflow before its real phase.
+class _ReadOnlyTerm extends StatelessWidget {
+  const _ReadOnlyTerm({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF0F4F8),
+        borderRadius: BorderRadius.circular(9),
+        border: Border.all(color: const Color(0xFFDCE5EF)),
+      ),
+      child: Text(label, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }

@@ -19,13 +19,28 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
-      - name: Set up Flutter stable
+      - name: Restore Flutter SDK and Dart packages cache
+        id: flutter-setup
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           cache: true
+          pub-cache: true
+          cache-key: "flutter-sdk-:os:-:channel:-:version:-:arch:"
+          pub-cache-key: "flutter-pub-:os:-:channel:-:version:-:arch:-:hash:"
+
+      - name: Show dependency cache status
+        shell: pwsh
+        env:
+          FLUTTER_CACHE_HIT: ${{ steps.flutter-setup.outputs.CACHE-HIT }}
+          PUB_CACHE_HIT: ${{ steps.flutter-setup.outputs.PUB-CACHE-HIT }}
+        run: |
+          Write-Host "Flutter SDK cache hit: $env:FLUTTER_CACHE_HIT"
+          Write-Host "Dart Pub cache hit:    $env:PUB_CACHE_HIT"
 
       - name: Record toolchain
         shell: pwsh
@@ -35,10 +50,15 @@ jobs:
           flutter doctor -v
           flutter config --enable-windows-desktop
 
-      - name: Generate official Windows runner without overwriting source
+      - name: Run metadata and packaging preparation unit tests
+        run: python -m unittest discover -s scripts -p "test_*.py" -v
+
+      - name: Generate and brand the official Windows runner
         shell: pwsh
         run: |
           ./scripts/prepare_windows.ps1
+          python scripts/patch_windows_metadata.py --check
+          if ($LASTEXITCODE -ne 0) { throw 'Windows native metadata validation failed' }
           git diff --exit-code -- lib test pubspec.yaml analysis_options.yaml
           if ($LASTEXITCODE -ne 0) { throw 'Windows bootstrap modified hand-written source files' }
 
@@ -58,28 +78,18 @@ jobs:
         run: python scripts/validate_contract.py
 
       - name: Build Windows release
-        run: flutter build windows --release
+        run: flutter build windows --release --no-pub
 
-      - name: Check release output and create portable-test artifact
+      - name: Package portable Windows test build with Arabic executable name
         shell: pwsh
-        run: |
-          $output = 'build\windows\x64\runner\Release'
-          if (!(Test-Path $output)) { throw "Build output not found: $output" }
-          $exe = Join-Path $output 'adwas_personnel.exe'
-          if (!(Test-Path $exe)) { throw 'Windows executable missing' }
-          New-Item -ItemType Directory -Force artifacts | Out-Null
-          $archive = 'artifacts\adwas-personnel-phase00-windows-x64.zip'
-          Compress-Archive -Path "$output\*" -DestinationPath $archive -Force
-          $hash = (Get-FileHash -Algorithm SHA256 $archive).Hash
-          "$hash  adwas-personnel-phase00-windows-x64.zip" | Out-File 'artifacts\SHA256SUMS.txt' -Encoding utf8
-          if ((Get-Item $archive).Length -lt 100000) { throw 'Suspiciously small build artifact' }
+        run: ./scripts/package_windows.ps1
 
-      - name: Upload private build artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload private Windows test artifact
+        uses: actions/upload-artifact@v6
         with:
-          name: adwas-personnel-phase00-windows-x64
+          name: Altamam_AlYawmi_Part_II_Windows_x64
           path: |
-            artifacts/adwas-personnel-phase00-windows-x64.zip
+            artifacts/Altamam_AlYawmi_Part_II_Windows_x64.zip
             artifacts/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 14

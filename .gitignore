@@ -51,3 +51,6 @@ Desktop.ini
 # Python validation cache
 __pycache__/
 *.pyc
+
+# Local Windows release packaging output
+artifacts/

@@ -56,7 +56,7 @@ This project follows **phase 00 through phase 42** sequentially and uses phase a
 
 ## Open implementation decisions (must be resolved before related coding)
 
-1. Application's final product title/Windows publisher identifier: interim working names `نظام إدارة شؤون الأفراد` / `com.adwas`.
+1. Application display/product title: **التمام اليومي** (confirmed by owner in Part II); internal project identifier remains `com.adwas` until the Windows packaging phase.
 2. Same-day repeated internal movement: recommended policy = refuse the second conflicting movement for the same person/date, with explicit message. This is a proposed deterministic choice, pending phase 07/22 testing.
 3. Release-time admin credential provisioning method: must preserve exact login, never commit plaintext production credentials.
 4. Windows portable encryption recovery and DPAPI: define offline portable recovery mechanism and key loss policy before encrypted storage is finalized.
