@@ -1,38 +1,45 @@
 # التمام اليومي — Windows (Flutter)
 
-**Part II: Fixed Arabic terminology / Windows product title · Foundation version 0.0.2 · not production-ready**
+**PART III — Permanent Personnel Identification & Exact Business Data Model**  
+**Version 0.0.3+3 — structural smoke-test, not yet a production personnel system**
 
-This repository is a Flutter Windows project for a fully offline personnel administration and monthly force-accountability system. It is still a foundation smoke-test application: operational screens, encrypted SQLite, accounts, transfers, exports, and archival functions are implemented in their **later** phases, not impersonated by dummy buttons.
+This is a continuation of the previously successfully built **Part II** private GitHub project, not a replacement. The public-facing Windows title and packaged executable remain **التمام اليومي**, while the stable Dart package name is `adwas_personnel`.
 
-## Included now
+## What is now implemented
 
-- Single-source fixed Arabic business terminology — `lib/core/config/business_terms.dart` and `docs/TERMINOLOGY.md`.
-- Product name **التمام اليومي** in Flutter app title, Windows window caption, Windows resources, and the packaged `.exe` filename.
-- Flutter foundation screen that truthfully displays the contract-approved Arabic terms as read-only labels.
-- Existing complete 43-phase traceability documentation and Phase-00 tests retained.
-- GitHub Actions native Windows build and portable smoke-test ZIP.
-- Explicit Flutter SDK **and Dart Pub** caches (reused between successful runs); `actions/checkout@v6`, `actions/upload-artifact@v6` for Node.js 24 compatibility.
-- Deterministic tests for business-term names and native Windows branding.
+- The Arabic business terminology of Part II, unchanged, including **الرقم (ع)**.
+- Immutable UUID v4 person identifiers and searchable yet display-preserving Arabic/Persian numeral normalization.
+- Canonical, relational SQLite schema in `assets/database/schema_v1.sql`: **29 tables** (27 specified + 2 historical integrity tables), foreign keys, uniqueness indexes and protecting triggers.
+- Permanent reservation of used business numbers, including corrected/retired numbers, preventing another individual from reusing them.
+- Protected default site `غير محدد` and all four default daily attendance statuses with fixed ARGB colors.
+- In-memory database tests enforcing assignment interval non-overlap, daily attendance uniqueness, archive sealing, soft-delete integrity, audit append-only behavior and more.
+- GitHub Actions Windows smoke-build with **cached Flutter SDK and Dart Pub packages**. Windows executable / artifact naming remains Arabic.
+- No unencrypted operational database files and no seeded passwords.
 
-## Upload to your existing private GitHub repository (Win-manger)
+## Architectural boundary
 
-1. Extract this ZIP on your device.
-2. **Update the existing private repository:** upload/replace files in the repository root on branch `main`. Keep the hidden `.github/` directory, especially `.github/workflows/windows-foundation.yml`.
-3. Do **not** upload the ZIP as one single GitHub repository file: upload its extracted contents.
-4. Open **Actions → Windows foundation build** and watch the new run.
-5. Verify each step is green, then download the artifact **Altamam_AlYawmi_Part_II_Windows_x64**.
-6. Extract the artifact ZIP and then the enclosed `Altamam_AlYawmi_Part_II_Windows_x64.zip` file.
-7. On a Windows 10/11 x64 computer, run **التمام اليومي.exe** from the extracted directory, alongside the DLLs and `data/` folder. Confirm the title bar and on-screen title say «التمام اليومي» and the label `الرقم (ع)` appears correctly.
-8. Report CI outcome and any runtime fault before proceeding to the next development part.
+**This release implements PART III only.** The SQL schema is actually executed and tested against a real SQLite engine in-memory. The Windows UI intentionally does *not* persist real personnel data yet: activation of a disk database is blocked pending verified encrypted SQLite and key handling (later specified persistence phases). It would be unsafe to save real individual details unencrypted merely to make this stage look functional.
 
-**Important:** The app does not create a desktop shortcut in this stage. The future Installer will create one named «التمام اليومي». At present, the executable itself is named «التمام اليومي.exe».
+PART IV business logic (historical force counting, transfers, monthly rollover, etc.) has **not** been built; it is intentionally separate, as requested. Authentication, real screens, backups, Excel and installer work also remain for their corresponding engineering phases.
 
-## Verify the code locally (Windows dev environment)
+## Update your private GitHub repository `Win-manger`
+
+1. Extract the **source** ZIP; upload/replace its **contents** at the root of the existing `main` branch, including hidden `.github/workflows/windows-foundation.yml`. Do not upload the source ZIP itself as a repository file.
+2. Open **Actions → Windows foundation build** and wait for a new run.
+3. Confirm the `Validate Part III SQLite tables and integrity constraints`, `Static analysis`, `Unit and widget tests`, and `Build Windows release` steps are all green.
+4. Inspect `Show dependency cache status`: a cache miss can occur when the SDK/version/hash changes; future compatible runs should reuse the cache.
+5. Download the **Altamam_AlYawmi_Part_III_Windows_x64** artifact. Inside it, extract `Altamam_AlYawmi_Part_III_Windows_x64.zip`, preserving the entire folder structure.
+6. On Windows 10/11 x64, open **التمام اليومي.exe** and confirm the title and read-only **الجزء الثالث — نموذج البيانات** screen. No personnel import should be attempted yet.
+7. Send the job result or failing-step logs. **Stop before moving to PART IV.**
+
+The portable test bundle doesn't create a desktop shortcut; the later Installer will create one under the name «التمام اليومي».
+
+## Local repeatable checks (Windows development machine)
 
 ```powershell
 flutter doctor -v
 flutter config --enable-windows-desktop
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\prepare_windows.ps1
+.\scripts\prepare_windows.ps1
 python -m unittest discover -s scripts -p "test_*.py" -v
 flutter pub get
 dart format lib test
@@ -40,14 +47,9 @@ flutter analyze
 flutter test
 python scripts/validate_contract.py
 flutter build windows --release --no-pub
-powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\package_windows.ps1
+.\scripts\package_windows.ps1
 ```
 
-The **internal** Dart package name and generated Flutter target remain `adwas_personnel` for stability; only the user-facing product title and distributed EXE are Arabic. Future feature work must use the terms and IDs in `docs/TERMINOLOGY.md`.
+**Security:** Use a private GitHub repository. Never upload real personnel lists, databases, backups, encryption keys, passwords, `.env` files or other secrets. A `.gitignore` protects common sensitive paths; review `git status` before committing.
 
-## Security & project status
-
-- GitHub must remain **Private**; do not upload personnel spreadsheets, `.db` files, backups, encryption keys, or customer data.
-- The foundational administrator's password must never appear in code, build logs, or the UI as plaintext. Its eventual provisioning/authentication is assigned to phase 09; it is **not** enabled in this package.
-- This app is not yet fit for operational personnel records. Database encryption belongs to phase 04.
-- Refer to `docs/PART_II_IMPLEMENTATION_REPORT.md`, `docs/PHASE_REPORT_00.md`, and the preserved requirements traceability for delivery status.
+For the exact table design and scope report, read `docs/DATA_MODEL.md` and `docs/PART_III_IMPLEMENTATION_REPORT.md`. The complete 43-phase redacted contract and traceability documentation remain in `docs/`.

@@ -50,7 +50,7 @@ jobs:
           flutter doctor -v
           flutter config --enable-windows-desktop
 
-      - name: Run metadata and packaging preparation unit tests
+      - name: Validate Part III SQLite tables and integrity constraints
         run: python -m unittest discover -s scripts -p "test_*.py" -v
 
       - name: Generate and brand the official Windows runner
@@ -77,6 +77,8 @@ jobs:
       - name: Validate requirements traceability
         run: python scripts/validate_contract.py
 
+      # Cache is already enabled by subosito/flutter-action for Flutter SDK
+      # and the Dart Pub package cache; never cache potentially stale EXEs.
       - name: Build Windows release
         run: flutter build windows --release --no-pub
 
@@ -87,9 +89,9 @@ jobs:
       - name: Upload private Windows test artifact
         uses: actions/upload-artifact@v6
         with:
-          name: Altamam_AlYawmi_Part_II_Windows_x64
+          name: Altamam_AlYawmi_Part_III_Windows_x64
           path: |
-            artifacts/Altamam_AlYawmi_Part_II_Windows_x64.zip
+            artifacts/Altamam_AlYawmi_Part_III_Windows_x64.zip
             artifacts/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 14

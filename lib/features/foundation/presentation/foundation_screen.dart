@@ -1,4 +1,5 @@
 import 'package:adwas_personnel/core/config/project_info.dart';
+import 'package:adwas_personnel/core/domain/schema_catalog.dart';
 import 'package:adwas_personnel/core/config/business_terms.dart';
 import 'package:flutter/material.dart';
 
@@ -82,7 +83,7 @@ class FoundationScreen extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: <Widget>[
                             Text(
-                              'المرحلة 00 — تأسيس المشروع',
+                              'الجزء الثالث — نموذج البيانات',
                               style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(
                                     fontWeight: FontWeight.w700,
@@ -91,9 +92,9 @@ class FoundationScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             const Text(
-                              'هذه نسخة أولية لاختبار بناء تطبيق Windows. '
-                              'تم إعداد هيكل Flutter وتوحيد المصطلحات العربية، '
-                              'ولم تُفعّل الوظائف التشغيلية بعد.',
+                              'اكتمل إعداد 29 جدولًا مترابطًا، وقيود الرقم (ع) الثابت '
+                              'ومنع التكرار وتداخل المواقع وحماية السجلات. '
+                              'هذه نسخة اختبار للبنية وليست نظامًا تشغيليًا بعد.',
                             ),
                           ],
                         ),
@@ -119,23 +120,25 @@ class FoundationScreen extends StatelessWidget {
                             ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 12),
-                      const _InfoLine('تشغيل نافذة تطبيق Windows بواجهة عربية.'),
-                      const _InfoLine('فحص بناء التطبيق والاختبارات الآلية على GitHub.'),
-                      const _InfoLine('تثبيت مواصفات 43 مرحلة هندسية داخل المستودع.'),
+                      const _InfoLine('بناء واجهة Windows باسم التمام اليومي.'),
+                      const _InfoLine('اختبارات آلية للمفاتيح والعلاقات والأرشيف وسجل العمليات.'),
+                      const _InfoLine('منع إدخال البيانات التشغيلية قبل تشفير التخزين.'),
+                      Text('جداول قاعدة البيانات: ${DatabaseSchemaCatalog.tableNames.length}',
+                        style: Theme.of(context).textTheme.titleSmall),
                       const SizedBox(height: 14),
                       const Divider(),
                       const SizedBox(height: 8),
                       Text(
-                        'قاعدة البيانات المشفرة، الحسابات والصلاحيات، '
-                        'والتحضير والأرشفة ستُنفَّذ في مراحلها التالية '
-                        'وتتطلب اختبارات مستقلة قبل الاعتماد.',
+                        'نُفِّذ مخطط قاعدة البيانات واختُبر في ذاكرة SQLite فقط. '
+                        'لم يُفعّل التخزين الدائم حتى يتم إعداد محرك قاعدة البيانات المشفرة. '
+                        'تفعيل الحسابات والتحضير والحركات والأرشيف ضمن المراحل القادمة.',
                         style: TextStyle(color: colors.onSurfaceVariant),
                       ),
                       const SizedBox(height: 18),
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'نسخة تأسيسية ${ProjectInfo.version}',
+                          'نسخة اختبار نموذج البيانات ${ProjectInfo.version}',
                           style: Theme.of(context).textTheme.labelMedium,
                         ),
                       ),

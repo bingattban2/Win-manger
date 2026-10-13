@@ -42,11 +42,14 @@ def check() -> None:
         assert row['test_case_id'] == f"P{row['phase']}-ACCEPT"
         assert row['verification'] == 'NOT_RUN'
     # Secrets must never be embedded as literal credentials in the shipping source.
-    prohibited = ('adwas2019113',)
+    # Only a one-way fingerprint of the prohibited literal is committed.
+    prohibited_sha256 = '09e4b51b19c4a76f8462f0da43eed8b952d82eea82aed7750fab4134afc496e1'
     for path in [*ROOT.rglob('*.dart'), *ROOT.rglob('*.yaml'), *ROOT.rglob('*.yml'), *ROOT.rglob('*.md')]:
         content = path.read_text(encoding='utf-8')
-        for secret in prohibited:
-            assert secret not in content, f'Plaintext credential in {path}'
+        candidates = re.findall(r'[A-Za-z0-9]{12}', content)
+        for candidate in candidates:
+            assert hashlib.sha256(candidate.encode('utf-8')).hexdigest() != prohibited_sha256, (
+                f'Plaintext credential in {path}')
     print('PASS: phase 00 documentation and all 43 phases are traceable.')
     print(f'PASS: {len(rows)} source-linked work items, 0 falsely verified.')
     print(f'Source SHA256 (redacted): {hashlib.sha256(source.encode()).hexdigest()}')
