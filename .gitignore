@@ -18,6 +18,7 @@ windows/flutter/generated_plugin_registrant.h
 windows/flutter/generated_plugins.cmake
 
 # Operational data, accounts, credentials, backups, and key material
+# Root-anchored folders: NEVER exclude lib/features/backups/ or source layers.
 *.db
 *.db-*
 *.sqlite
@@ -36,11 +37,11 @@ windows/flutter/generated_plugins.cmake
 *.env
 .env.*
 !*.env.example
-secrets/
-private/
-user_data/
-backups/
-data/
+/secrets/
+/private/
+/user_data/
+/backups/
+/data/
 
 # System files
 .DS_Store

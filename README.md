@@ -35,3 +35,18 @@ without a Windows computer view the Flutter foundation interface on a phone.
 The APK preview is not the Windows EXE and does not verify Windows behavior.
 
 Do not proceed to the next milestone until the Windows build is green.
+
+## PART VI build hotfix — GitHub ignore path conflict
+
+The first PART VI CI run failed at `test_01_feature_boundaries_exist` because the
+original unanchored `backups/` ignore rule silently excluded the *source*
+folder `lib/features/backups/`, including its `.gitkeep` markers.
+
+This source archive changes only the root-level ignore exclusions and adds a
+regression test (`test_00_gitignore_keeps_feature_layers_trackable`) executed
+with Git's own ignore engine. It leaves runtime logic, database schema,
+release version (`0.0.6+6`) and cached Flutter/Dart dependencies untouched.
+
+Upload the entire replacement source archive, **including hidden `.gitkeep`
+files in every feature layer**. GitHub Actions must turn green before proceeding
+to PART VII. Full details: `docs/PART_VI_BUILD_HOTFIX.md`.

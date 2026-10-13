@@ -1,6 +1,8 @@
 """Static architecture checks supplement the real Dart pipeline unit tests."""
 from pathlib import Path
 import re
+import subprocess
+import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -8,6 +10,56 @@ LIB = ROOT / "lib"
 
 
 class PartVIArchitectureTests(unittest.TestCase):
+    def test_00_gitignore_keeps_feature_layers_trackable(self):
+        """Check the actual Git ignore engine, not a fragile text substring.
+
+        Root-level backup/data directories must remain excluded, while
+        feature source directories (including lib/features/backups) must
+        always remain trackable in GitHub. The test works in a fresh checkout
+        and independently of the GitHub uploader used by the developer.
+        """
+        features = (
+            "authentication", "dashboard", "personnel", "sites", "statuses",
+            "imports", "exports", "preparation", "monthly_accountability",
+            "internal_transfers", "external_transfers", "dismissals",
+            "archives", "reports", "users", "backups", "settings",
+        )
+        layers = ("presentation", "application", "domain", "repositories", "infrastructure")
+        source_markers = [
+            f"lib/features/{feature}/{layer}/.gitkeep"
+            for feature in features for layer in layers
+        ]
+        private_paths = [
+            "backups/backup.zip", "data/local-storage.bin",
+            "user_data/private-export.zip", "private/access.txt",
+            "secrets/credential.txt", "anywhere/personnel.db",
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            temp = Path(directory)
+            (temp / ".gitignore").write_text(
+                (ROOT / ".gitignore").read_text(encoding="utf-8"),
+                encoding="utf-8",
+            )
+            subprocess.run(
+                ["git", "init", "-q"], cwd=temp, check=True,
+                capture_output=True, text=True,
+            )
+            process = subprocess.run(
+                ["git", "check-ignore", "--no-index", "-v", "--stdin"],
+                cwd=temp,
+                input="\n".join(source_markers + private_paths) + "\n",
+                capture_output=True, text=True,
+            )
+            self.assertIn(process.returncode, (0, 1), process.stderr)
+            ignored = {
+                line.split("\t", 1)[1].strip()
+                for line in process.stdout.splitlines() if "\t" in line
+            }
+            excluded_source = sorted(set(source_markers) & ignored)
+            self.assertEqual(excluded_source, [], f"Source tree ignored by Git: {excluded_source}")
+            missing_protection = sorted(set(private_paths) - ignored)
+            self.assertEqual(missing_protection, [], f"Private storage is not ignored: {missing_protection}")
+
     def test_01_feature_boundaries_exist(self):
         features = (
             "authentication", "dashboard", "personnel", "sites", "statuses",
