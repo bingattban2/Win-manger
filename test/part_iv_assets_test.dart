@@ -18,7 +18,7 @@ void main() {
 
   test('Part IV keeps the Arabic Windows application identity', () {
     expect(ProjectInfo.nameArabic, 'التمام اليومي');
-    expect(ProjectInfo.version, '0.0.4');
+    expect(ProjectInfo.version, '0.0.5');
     expect(ProjectInfo.isProductionReady, isFalse);
   });
 }

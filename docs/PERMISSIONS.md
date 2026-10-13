@@ -26,3 +26,16 @@
 - Reset/destructive operations retain the extra password-confirmation safeguards required by their individual workflows.
 
 Do not implement these permissions only by hiding UI controls; verify at the application service/domain boundary, with dedicated negative tests in phase 31 and phase 39.
+
+## PART V implementation (0.0.5)
+
+This permission table is now enforced by `lib/core/security/account_policy.dart`
+and checked by `OfflineAuthenticationService.requirePermission()` before the
+`UserManagementService` performs changes. PostgreSQL/server privileges are not
+used; the future encrypted SQLite repository will expose only authorized
+application operations. Foundation is protected by SQLite overlay triggers
+`assets/database/part_v_authorization.sql`.
+
+These services and policies are covered by SQLite + Flutter test suites, but
+they are **not connected to a production login screen or persistent encrypted
+SQLite until the prescribed authentication/database integration phases**.

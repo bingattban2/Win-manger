@@ -1,7 +1,7 @@
 name: adwas_personnel
 description: Offline Arabic-first Windows personnel administration application.
 publish_to: none
-version: 0.0.4+4
+version: 0.0.5+5
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -9,6 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  crypto: ^3.0.6
 
 dev_dependencies:
   flutter_test:
@@ -21,3 +22,4 @@ flutter:
     - assets/database/seed_v1.sql
     - assets/database/part_iv_rules.sql
     - assets/database/part_iv_statistics.sql
+    - assets/database/part_v_authorization.sql
