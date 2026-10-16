@@ -62,9 +62,11 @@
     <div class="login-container">
         <h1>التمام اليومي</h1>
         <form id="loginForm">
-            <input type="text" id="username" placeholder="اسم المستخدم" required>
-            <input type="password" id="password" placeholder="كلمة المرور" required>
-            <button type="submit">تسجيل الدخول</button>
+            <label for="username" style="display:none;">اسم المستخدم</label>
+            <input type="text" id="username" name="username" placeholder="اسم المستخدم" aria-label="اسم المستخدم" title="اسم المستخدم" required>
+            <label for="password" style="display:none;">كلمة المرور</label>
+            <input type="password" id="password" name="password" placeholder="كلمة المرور" aria-label="كلمة المرور" title="كلمة المرور" required>
+            <button type="submit" aria-label="تسجيل الدخول">تسجيل الدخول</button>
         </form>
         <div id="message"></div>
     </div>

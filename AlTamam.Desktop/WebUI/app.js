@@ -14,7 +14,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     if (window.chrome && window.chrome.webview) {
         window.chrome.webview.postMessage(request);
     } else {
-        document.getElementById('message').innerText = 'WebView2 bridge not found. Running outside desktop app?';
+        document.getElementById('message').textContent = 'WebView2 bridge not found. Running outside desktop app?';
     }
 });
 
@@ -23,9 +23,9 @@ if (window.chrome && window.chrome.webview) {
     window.chrome.webview.addEventListener('message', event => {
         const response = event.data;
         if (!response.success) {
-            document.getElementById('message').innerText = response.userMessage || 'حدث خطأ غير معروف';
+            document.getElementById('message').textContent = response.userMessage || 'حدث خطأ غير معروف';
         } else {
-            document.getElementById('message').innerText = 'تم تسجيل الدخول بنجاح';
+            document.getElementById('message').textContent = 'تم تسجيل الدخول بنجاح';
             document.getElementById('message').style.color = '#2ecc71';
         }
     });
