@@ -14,9 +14,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="WebUI\**\*.*">
+    <Content Include="WebUI\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

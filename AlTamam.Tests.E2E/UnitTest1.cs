@@ -1,10 +1,14 @@
-﻿namespace AlTamam.Tests.E2E;
+using System;
+using Xunit;
 
-public class UnitTest1
+namespace AlTamam.Tests.E2E
 {
-    [Fact]
-    public void Test1()
+    public class UnitTest1
     {
+        [Fact]
+        public void Test1()
+        {
 
+        }
     }
 }

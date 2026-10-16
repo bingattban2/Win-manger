@@ -18,4 +18,11 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\AlTamam.Domain\AlTamam.Domain.csproj" />
+    <ProjectReference Include="..\AlTamam.Application\AlTamam.Application.csproj" />
+    <ProjectReference Include="..\AlTamam.Infrastructure\AlTamam.Infrastructure.csproj" />
+    <ProjectReference Include="..\AlTamam.Contracts\AlTamam.Contracts.csproj" />
+  </ItemGroup>
+
 </Project>
