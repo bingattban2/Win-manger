@@ -1,0 +1,42 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 10.0.x
+
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/packages.config') }}
+        restore-keys: |
+          ${{ runner.os }}-nuget-
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Test Unit
+      run: dotnet test AlTamam.Tests.Unit/AlTamam.Tests.Unit.csproj --configuration Release --no-build --verbosity normal
+
+    - name: Test Integration
+      run: dotnet test AlTamam.Tests.Integration/AlTamam.Tests.Integration.csproj --configuration Release --no-build --verbosity normal
+
+    - name: Test E2E
+      run: dotnet test AlTamam.Tests.E2E/AlTamam.Tests.E2E.csproj --configuration Release --no-build --verbosity normal

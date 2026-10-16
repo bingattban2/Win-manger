@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="AlTamam.Application/AlTamam.Application.csproj" />
+  <Project Path="AlTamam.Contracts/AlTamam.Contracts.csproj" />
+  <Project Path="AlTamam.Desktop/AlTamam.Desktop.csproj" />
+  <Project Path="AlTamam.Domain/AlTamam.Domain.csproj" />
+  <Project Path="AlTamam.Infrastructure/AlTamam.Infrastructure.csproj" />
+  <Project Path="AlTamam.Tests.E2E/AlTamam.Tests.E2E.csproj" />
+  <Project Path="AlTamam.Tests.Integration/AlTamam.Tests.Integration.csproj" />
+  <Project Path="AlTamam.Tests.Unit/AlTamam.Tests.Unit.csproj" />
+</Solution>
